@@ -74,6 +74,13 @@ const routes = apiFactory
       return c.json({ error: "errors:game.locked" }, StatusCodes.FORBIDDEN)
     }
 
+    if (
+      game.settings.maxParticipants > 0 &&
+      game.players.length >= game.settings.maxParticipants
+    ) {
+      return c.json({ error: "errors:game.roomFull" }, StatusCodes.FORBIDDEN)
+    }
+
     return c.json({ generatedUsernames: game.settings.generatedUsernames })
   })
   .post(
@@ -81,7 +88,7 @@ const routes = apiFactory
     requireSession,
     zValidator("json", joinGameValidator, i18nHook),
     async (c) => {
-      const { inviteCode, username } = c.req.valid("json")
+      const { inviteCode, username, deviceId } = c.req.valid("json")
       const game = Registry.getInstance().getGameByInviteCode(inviteCode)
 
       if (!game) {
@@ -93,6 +100,13 @@ const routes = apiFactory
       if (game.manager.clientId === sub) {
         return c.json(
           { error: "errors:game.managerCannotJoin" },
+          StatusCodes.FORBIDDEN,
+        )
+      }
+
+      if (game.isExpelled(sub, deviceId)) {
+        return c.json(
+          { error: "errors:game.expelledForCheating" },
           StatusCodes.FORBIDDEN,
         )
       }
@@ -111,6 +125,13 @@ const routes = apiFactory
         return c.json({ error: "errors:game.locked" }, StatusCodes.FORBIDDEN)
       }
 
+      if (
+        game.settings.maxParticipants > 0 &&
+        game.players.length >= game.settings.maxParticipants
+      ) {
+        return c.json({ error: "errors:game.roomFull" }, StatusCodes.FORBIDDEN)
+      }
+
       if (!game.settings.generatedUsernames && !username) {
         return c.json(
           { error: "errors:auth.usernameTooShort" },
@@ -122,7 +143,7 @@ const routes = apiFactory
 
       return c.json({
         gameId: game.gameId,
-        ticket: await mintJoinTicket(sub, game.gameId, name),
+        ticket: await mintJoinTicket(sub, game.gameId, name, deviceId),
         username: name ?? null,
       })
     },

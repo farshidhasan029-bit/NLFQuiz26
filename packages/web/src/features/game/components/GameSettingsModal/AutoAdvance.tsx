@@ -6,9 +6,14 @@ import { Controller, useFormContext, useWatch } from "react-hook-form"
 import { useTranslation } from "react-i18next"
 
 const AutoAdvance = () => {
-  const { control } = useFormContext<GameSettings>()
+  const { control, setValue } = useFormContext<GameSettings>()
   const { t } = useTranslation()
   const enable = useWatch({ control, name: "autoAdvance.enable" })
+
+  const handlePreset = (sec: number) => {
+    setValue("autoAdvance.responsesDelay", sec, { shouldValidate: true })
+    setValue("autoAdvance.leaderboardDelay", sec, { shouldValidate: true })
+  }
 
   return (
     <>
@@ -30,17 +35,35 @@ const AutoAdvance = () => {
       />
 
       {enable && (
-        <div className="mt-4 flex items-start gap-4">
-          <NumberField
-            name="autoAdvance.responsesDelay"
-            label="game:settings.autoAdvance.responsesDelay"
-            className="flex-1"
-          />
-          <NumberField
-            name="autoAdvance.leaderboardDelay"
-            label="game:settings.autoAdvance.leaderboardDelay"
-            className="flex-1"
-          />
+        <div className="mt-4 flex flex-col gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-muted-foreground text-xs font-semibold uppercase">
+              Quick presets:
+            </span>
+            {[3, 5, 10, 15].map((sec) => (
+              <button
+                key={sec}
+                type="button"
+                onClick={() => handlePreset(sec)}
+                className="hover:bg-accent rounded-md border px-2 py-0.5 text-xs font-bold"
+              >
+                {sec}s
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-start gap-4">
+            <NumberField
+              name="autoAdvance.responsesDelay"
+              label="game:settings.autoAdvance.responsesDelay"
+              className="flex-1"
+            />
+            <NumberField
+              name="autoAdvance.leaderboardDelay"
+              label="game:settings.autoAdvance.leaderboardDelay"
+              className="flex-1"
+            />
+          </div>
         </div>
       )}
     </>

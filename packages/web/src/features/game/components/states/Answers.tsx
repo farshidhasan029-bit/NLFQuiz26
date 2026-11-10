@@ -8,11 +8,13 @@ import {
   useSocket,
 } from "@razzia/web/features/game/contexts/socket-context"
 import { usePlayerStore } from "@razzia/web/features/game/stores/player"
+import { useQuestionStore } from "@razzia/web/features/game/stores/question"
 import { SFX } from "@razzia/web/features/game/utils/constants"
 import { QUESTION_REGISTRY } from "@razzia/web/features/questions"
 import useScreenSize from "@razzia/web/hooks/useScreenSize"
+import { triggerHaptic, HAPTIC_PATTERNS } from "@razzia/web/lib/haptics"
 import clsx from "clsx"
-import { CircleQuestionMark, Image, Video } from "lucide-react"
+import { CircleQuestionMark, Image, Lock, Pause, Video } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import useSound from "use-sound"
@@ -36,8 +38,10 @@ const Answers = ({
     answersOnly,
   },
 }: Props) => {
-  const { socket } = useSocket()
+  const { socket, isConnected } = useSocket()
+  const { isPaused } = useQuestionStore()
   const { player, gameId } = usePlayerStore()
+  const isTimerStopped = !isConnected || isPaused
 
   const [cooldown, setCooldown] = useState(time)
   const [totalAnswer, setTotalAnswer] = useState(0)
@@ -60,10 +64,15 @@ const Answers = ({
     loop: true,
   })
 
+  const [pendingAnswer, setPendingAnswer] = useState<number[] | null>(null)
+
   const handleSubmit = (answerKeys: number[]) => {
     if (!player || !gameId) {
       return
     }
+
+    setPendingAnswer(answerKeys)
+    triggerHaptic(HAPTIC_PATTERNS.LOCK)
 
     socket.emit(EVENTS.PLAYER.SELECTED_ANSWER, {
       gameId,
@@ -75,6 +84,17 @@ const Answers = ({
   }
 
   useEffect(() => {
+    if (socket.connected && pendingAnswer && gameId) {
+      socket.emit(EVENTS.PLAYER.SELECTED_ANSWER, {
+        gameId,
+        data: {
+          answerKeys: pendingAnswer,
+        },
+      })
+    }
+  }, [socket.connected, pendingAnswer, gameId])
+
+  useEffect(() => {
     const disabledMusicMedia: QuestionMediaType[] = [
       MEDIA_TYPES.AUDIO,
       MEDIA_TYPES.VIDEO,
@@ -84,13 +104,16 @@ const Answers = ({
       return
     }
 
-    playMusic()
+    if (isTimerStopped) {
+      stopMusic()
+    } else {
+      playMusic()
+    }
 
     return () => {
       stopMusic()
     }
-    // oxlint-disable-next-line
-  }, [playMusic])
+  }, [playMusic, stopMusic, media?.type, isTimerStopped])
 
   useEvent(EVENTS.GAME.COOLDOWN, (sec) => {
     setCooldown(sec)
@@ -106,7 +129,23 @@ const Answers = ({
   const MediaIcon = media?.type === MEDIA_TYPES.VIDEO ? Video : Image
 
   return (
-    <div className="flex h-full flex-1 flex-col justify-between">
+    <div className="relative flex h-full flex-1 flex-col justify-between">
+      {pendingAnswer && (
+        <div className="pointer-events-none fixed top-4 inset-x-0 z-50 mx-auto flex w-fit items-center gap-2 rounded-2xl bg-black/85 px-5 py-2.5 text-white shadow-2xl backdrop-blur-md border border-white/20 animate-pulse">
+          <Lock className="size-5 text-amber-300" />
+          <span className="font-extrabold text-sm md:text-base">Answer Locked In!</span>
+        </div>
+      )}
+      {isTimerStopped && (
+        <div className="pointer-events-none fixed top-16 inset-x-0 z-40 mx-auto flex w-fit items-center gap-2 rounded-full bg-amber-500/95 px-4 py-1.5 text-xs md:text-sm font-extrabold text-white shadow-xl backdrop-blur-md border border-amber-300/40 animate-pulse">
+          <Pause className="size-4 fill-white" />
+          <span>
+            {!isConnected
+              ? t("game:timerStoppedOffline")
+              : t("game:timerStoppedGamePaused")}
+          </span>
+        </div>
+      )}
       {showAnswersOnly ? (
         <>
           <QuestionDialog
@@ -153,11 +192,25 @@ const Answers = ({
       <div className={clsx({ "flex flex-1 flex-col": showAnswersOnly })}>
         <div className="mx-auto mb-4 flex w-full max-w-7xl justify-between gap-1 px-2 text-lg font-bold text-white md:text-xl">
           {time !== NO_TIME_LIMIT && (
-            <div className="flex flex-col items-center rounded-lg bg-black/40 px-4 text-lg font-bold">
-              <span className="translate-y-1 text-sm">
-                {t("game:hud.time")}
+            <div
+              className={clsx(
+                "flex flex-col items-center rounded-xl px-4 py-1 font-bold transition-all shadow-md",
+                isTimerStopped
+                  ? "bg-amber-500/90 border-2 border-amber-300 text-white animate-pulse"
+                  : "bg-black/40 text-white",
+              )}
+            >
+              <span className="translate-y-0.5 text-xs flex items-center gap-1 uppercase tracking-wide">
+                {isTimerStopped ? (
+                  <>
+                    <Pause className="size-3 fill-current" />
+                    <span>{t("game:hud.timerStopped")}</span>
+                  </>
+                ) : (
+                  t("game:hud.time")
+                )}
               </span>
-              <span>{cooldown}</span>
+              <span className="font-mono text-xl">{cooldown}s</span>
             </div>
           )}
           <div className="flex flex-col items-center rounded-lg bg-black/40 px-4 text-lg font-bold">

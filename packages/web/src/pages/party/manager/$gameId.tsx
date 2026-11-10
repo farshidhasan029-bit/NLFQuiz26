@@ -68,6 +68,12 @@ const ManagerGamePage = () => {
     updateManager({ locked })
   })
 
+  useEvent(EVENTS.MANAGER.PLAYER_EXPELLED, ({ username }) => {
+    toast.error(t("game:antiCheat.managerAlert", { username }), {
+      duration: 5000,
+    })
+  })
+
   useEvent(EVENTS.GAME.RESET, (message) => {
     navigate({ to: "/manager/config" })
     resetManager()

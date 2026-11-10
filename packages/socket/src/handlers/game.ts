@@ -92,7 +92,7 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
           return
         }
 
-        const error = game.join(socket, claims.username)
+        const error = game.join(socket, claims.username, claims.deviceId)
 
         if (error) {
           socket.emit(EVENTS.GAME.RESET, error)
@@ -117,12 +117,48 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
 
   socket.on(EVENTS.PLAYER.SELECTED_ANSWER, ({ gameId, data }) =>
     withPlayerGame(gameId, socket, (game) =>
-      game.selectAnswer(socket, data.answerKeys),
+      game.selectAnswer(socket, data.answerKeys, data.questionIndex),
     ),
   )
 
+  socket.on(EVENTS.PLAYER.SKIP_QUESTION, ({ gameId, data }) =>
+    withPlayerGame(gameId, socket, (game) =>
+      game.skipQuestion(socket, data.questionIndex),
+    ),
+  )
+
+  socket.on(EVENTS.PLAYER.SUBMIT_QUIZ, ({ gameId }) =>
+    withPlayerGame(gameId, socket, (game) =>
+      game.submitQuiz(socket),
+    ),
+  )
+
+  socket.on(EVENTS.PLAYER.CHEATING_DETECTED, ({ gameId, reason }) =>
+    withPlayerGame(gameId, socket, (game) =>
+      game.expelCheater(socket, reason),
+    ),
+  )
+
+  socket.on(EVENTS.PLAYER.SEND_REACTION, ({ gameId, emoji }) => {
+    if (typeof emoji === "string" && emoji.length <= 8) {
+      io.to(gameId).emit(EVENTS.GAME.REACTION, {
+        id: Math.random().toString(36).substring(2, 9),
+        emoji,
+        x: Math.floor(Math.random() * 80) + 10,
+      })
+    }
+  })
+
   socket.on(EVENTS.MANAGER.ADVANCE, ({ gameId }) =>
     withManagerGame(gameId, socket, (game) => game.advance()),
+  )
+
+  socket.on(EVENTS.MANAGER.PAUSE_GAME, ({ gameId }) =>
+    withManagerGame(gameId, socket, (game) => game.pauseGame()),
+  )
+
+  socket.on(EVENTS.MANAGER.RESUME_GAME, ({ gameId }) =>
+    withManagerGame(gameId, socket, (game) => game.resumeGame()),
   )
 
   socket.on(EVENTS.MANAGER.LEAVE, ({ gameId }) => {

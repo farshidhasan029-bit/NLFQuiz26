@@ -10,6 +10,8 @@ import Room from "@razzia/web/features/game/components/states/Room"
 import Start from "@razzia/web/features/game/components/states/Start"
 import Summary from "@razzia/web/features/game/components/states/Summary"
 import Wait from "@razzia/web/features/game/components/states/Wait"
+import SelfPacedQuiz from "@razzia/web/features/game/components/states/SelfPacedQuiz"
+import HostSelfPaced from "@razzia/web/features/game/components/states/HostSelfPaced"
 
 import { STATUS } from "@razzia/common/types/game/status"
 
@@ -42,6 +44,7 @@ export const GAME_STATE_COMPONENTS = {
   [STATUS.SHOW_PREPARED]: Prepared,
   [STATUS.FINISHED]: PlayerFinished,
   [STATUS.SUMMARY]: Summary,
+  [STATUS.SELF_PACED_QUIZ]: SelfPacedQuiz,
 }
 
 export const GAME_STATE_COMPONENTS_MANAGER = {
@@ -50,6 +53,7 @@ export const GAME_STATE_COMPONENTS_MANAGER = {
   [STATUS.SHOW_RESPONSES]: Responses,
   [STATUS.SHOW_LEADERBOARD]: Leaderboard,
   [STATUS.FINISHED]: Podium,
+  [STATUS.SELF_PACED_QUIZ]: HostSelfPaced,
 }
 
 export const SFX = {
@@ -87,4 +91,5 @@ export const MANAGER_SKIP_BTN = {
   [STATUS.FINISHED]: "common:exit",
   [STATUS.SUMMARY]: "common:exit",
   [STATUS.WAIT]: null,
+  [STATUS.SELF_PACED_QUIZ]: "game:finishQuiz",
 }

@@ -23,6 +23,16 @@ export const clientEventValidators = {
   [EVENTS.PLAYER.RECONNECT]: gameMessageValidator,
   [EVENTS.PLAYER.LEAVE]: gameMessageValidator,
   [EVENTS.PLAYER.SELECTED_ANSWER]: gameMessageValidator.extend({
-    data: z.object({ answerKeys: answerKeysValidator }),
+    data: z.object({
+      answerKeys: answerKeysValidator,
+      questionIndex: z.number().int().min(0).optional(),
+    }),
+  }),
+  [EVENTS.PLAYER.SKIP_QUESTION]: gameMessageValidator.extend({
+    questionIndex: z.number().int().min(0),
+  }),
+  [EVENTS.PLAYER.SUBMIT_QUIZ]: gameMessageValidator,
+  [EVENTS.PLAYER.CHEATING_DETECTED]: gameMessageValidator.extend({
+    reason: z.string().optional(),
   }),
 }

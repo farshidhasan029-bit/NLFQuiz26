@@ -9,7 +9,7 @@ import { managerLogout } from "@razzia/web/features/manager/queries"
 import { setToken } from "@razzia/web/lib/session"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { LogOut } from "lucide-react"
+import { LogOut, Settings } from "lucide-react"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -53,9 +53,12 @@ const Configurations = () => {
   return (
     <Card className="max-h-128 w-full max-w-md">
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-lg font-semibold">
-          {t("manager:configurationsTitle")}
-        </p>
+        <div className="flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-1.5 border border-primary/25 shadow-sm">
+          <Settings className="size-4.5 text-primary" />
+          <h1 className="text-base font-extrabold text-primary tracking-wide">
+            {t("manager:configurationsTitle")}
+          </h1>
+        </div>
         <div className="flex items-center gap-2">
           <LanguageSwitcher />
           <button

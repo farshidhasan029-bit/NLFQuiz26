@@ -24,7 +24,9 @@
     "managerDisconnected": "Quản trị viên đã ngắt kết nối",
     "noPlayersConnected": "Không có người chơi nào kết nối",
     "notFound": "Không tìm thấy trò chơi",
-    "playerAlreadyConnected": "Người chơi đã kết nối"
+    "playerAlreadyConnected": "Người chơi đã kết nối",
+    "expelledForCheating": "You have been expelled from the quiz for splitting your screen or switching windows",
+    "roomFull": "Phòng thi đã đạt số lượng người tham gia tối đa"
   },
   "invalidRequest": "Yêu cầu không hợp lệ",
   "manager": {

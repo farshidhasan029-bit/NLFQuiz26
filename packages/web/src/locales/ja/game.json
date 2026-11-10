@@ -6,14 +6,15 @@
   "generatedUsernameNotice": "参加するとランダムなニックネームが割り当てられます。",
   "hud": {
     "answers": "回答数",
-    "time": "時間"
+    "time": "時間",
+    "timerStopped": "タイマー停止"
   },
   "media": {
     "showImage": "画像を表示",
     "showVideo": "動画を表示"
   },
   "question": {
-    "show": "問題を表示"
+    "show": "質問を表示"
   },
   "joinInstruction": "以下でゲームに参加してください",
   "leaderboard": "リーダーボード",
@@ -46,7 +47,32 @@
       "label": "回答のみ",
       "hint": "プレイヤーには回答ボタンだけが表示され、問題はボタンで読み直せます。"
     },
-    "title": "ゲーム設定"
+    "title": "ゲーム設定",
+    "antiCheat": {
+      "label": "Anti-Cheat Protection",
+      "hint": "Automatically expels participants who split their screen or switch windows during the quiz."
+    },
+    "hidePlayerResults": {
+      "label": "ホスト限定の結果と順位",
+      "hint": "ホストのみが正解と順位を確認できます。参加者には待機画面が表示されます。"
+    },
+    "pauseOnDisconnect": {
+      "label": "切断時にタイマーを一時停止",
+      "hint": "参加者がオフラインになった場合にカウントダウンを停止し、時間を失わないようにします。"
+    },
+    "ultimateTimer": {
+      "label": "最終クイズタイマー",
+      "hint": "クイズ全体が終了するまでのカウントダウン制限時間を設定します。時間切れになる前に全問回答する必要があります。",
+      "duration": "合計時間（秒）"
+    },
+    "selfPaced": {
+      "label": "セルフペース試験モード",
+      "hint": "参加者は自分のペースで回答し、質問をスキップして後からいつでも戻ることができます"
+    },
+    "maxParticipants": {
+      "label": "参加者制限",
+      "hint": "このクイズに参加できる人数を制限します（無制限の場合は0）"
+    }
   },
   "startGame": "開始",
   "summary": {
@@ -64,5 +90,55 @@
   },
   "showQrCode": "QRコードを表示",
   "streak": "連続正解",
-  "pinDigit": "PIN の {{position}} 桁目"
+  "pinDigit": "PIN の {{position}} 桁目",
+  "rank_ordinal_one": "{{count}}st place",
+  "rank_ordinal_two": "{{count}}nd place",
+  "rank_ordinal_few": "{{count}}rd place",
+  "antiCheat": {
+    "banner": "Anti-cheat active: Screen splitting or window switching will result in expulsion.",
+    "managerAlert": "{{username}} was expelled for screen-splitting / cheating."
+  },
+  "connectionDisrupted": "Network connection disrupted. Reconnecting... (Your progress is saved)",
+  "reconnecting": "Reconnecting to quiz... Your progress is saved",
+  "answerRecordedTitle": "回答が記録されました！",
+  "answerRecordedWaitHost": "正解と順位表はホストの画面をご覧ください。",
+  "hostRevealInProgress": "ホスト画面で結果発表中",
+  "quizFinishedTitle": "クイズ完了！",
+  "quizFinishedWaitHost": "ご参加ありがとうございました！最終順位と勝者はホスト画面で発表されます。",
+  "watchHostScreenPodium": "ホスト画面で勝者発表",
+  "timerStoppedOffline": "オフライン — タイマー停止中。再接続しています...",
+  "timerStoppedGamePaused": "クイズ一時停止中 — タイマー停止",
+  "connectionDisruptedWithTimer": "ネットワーク切断 — 端末のタイマー停止中。再接続しています...",
+  "quizPausedPlayerOffline": "クイズ一時停止: {{username}} がオフラインになりました — タイマー停止中",
+  "quizPausedHost": "ホストによりクイズ一時停止中",
+  "ultimateTimerLabel": "クイズ制限時間",
+  "ultimateTimerExpired": "時間切れです！クイズの全体制限時間が終了しました。",
+  "deviceJoinCount": "この端末から{{count}}回参加しました",
+  "skipQuestion": "質問をスキップ",
+  "previousQuestion": "前へ",
+  "nextQuestion": "次へ",
+  "submitQuiz": "クイズを提出",
+  "submitQuizConfirmTitle": "クイズを提出しますか？",
+  "submitQuizNow": "回答を提出",
+  "submitQuizReady": "すべての質問に回答しました。提出する準備はできましたか？",
+  "submitQuizWarningUnanswered": "まだ未回答の質問があります。今すぐ提出してもよろしいですか？",
+  "quizSubmittedWait": "クイズを提出しました！主催者が最終結果を発表するまでお待ちください。",
+  "finishQuiz": "クイズを終了",
+  "finishAndReveal": "終了して結果を表示",
+  "finishQuizConfirmTitle": "クイズを早期終了しますか？",
+  "finishQuizConfirmDesc": "参加者{{total}}人中{{submitted}}人が提出しました。今終了すると現在の回答で採点されます。",
+  "finishQuizNow": "今すぐクイズを終了",
+  "selfPacedExamTitle": "セルフペース試験モード",
+  "examInProgress": "クイズ進行中",
+  "questionsTotal": "質問",
+  "answered": "回答済み",
+  "answeredBadge": "回答済み",
+  "skippedBadge": "スキップ済み",
+  "unanswered": "未回答",
+  "inProgressBadge": "進行中",
+  "submittedBadge": "提出済み",
+  "unlimited": "無制限",
+  "capacityReached": "定員に達しました",
+  "submitted": "提出済み",
+  "questionLabel": "質問"
 }

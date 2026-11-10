@@ -46,6 +46,8 @@ export interface ServerToClientEvents {
     gameId: string
     username: string
     gameMode: QuizzMode
+    detectScreenSplit?: boolean
+    hidePlayerResults?: boolean
   }) => void
   [EVENTS.GAME.TOTAL_PLAYERS]: (_count: number) => void
   [EVENTS.GAME.ERROR_MESSAGE]: (_message: string) => void
@@ -57,11 +59,29 @@ export interface ServerToClientEvents {
     total: number
   }) => void
   [EVENTS.GAME.PLAYER_ANSWER]: (_count: number) => void
+  [EVENTS.GAME.PAUSE_UPDATE]: (_data: boolean | { paused: boolean; reason?: string; username?: string }) => void
+  [EVENTS.GAME.ULTIMATE_TIMER_UPDATE]: (_data: {
+    remaining: number
+    total: number
+    active: boolean
+    paused: boolean
+  }) => void
+  [EVENTS.GAME.ULTIMATE_TIMER_EXPIRED]: () => void
+  [EVENTS.GAME.PLAYER_PROGRESS_UPDATE]: (_data: {
+    playerId: string
+    username: string
+    answeredCount: number
+    skippedCount: number
+    totalQuestions: number
+    completed: boolean
+  }) => void
 
   // Player events
   [EVENTS.PLAYER.SUCCESS_RECONNECT]: (_data: {
     gameId: string
     gameMode: QuizzMode
+    detectScreenSplit?: boolean
+    hidePlayerResults?: boolean
     status: { name: Status; data: StatusDataMap[Status] }
     player: { username: string; points: number }
     currentQuestion: GameUpdateQuestion | null
@@ -88,6 +108,11 @@ export interface ServerToClientEvents {
   [EVENTS.MANAGER.NEW_PLAYER]: (_player: Player) => void
   [EVENTS.MANAGER.REMOVE_PLAYER]: (_playerId: string) => void
   [EVENTS.MANAGER.PLAYER_KICKED]: (_playerId: string) => void
+  [EVENTS.MANAGER.PLAYER_EXPELLED]: (_data: {
+    playerId: string
+    username: string
+    reason: string
+  }) => void
   [EVENTS.MANAGER.PLAYER_UPDATED]: (_update: {
     previousId: string
     player: Player

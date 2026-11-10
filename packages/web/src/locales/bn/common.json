@@ -1,0 +1,30 @@
+{
+  "cancel": "বাতিল",
+  "confirm": "নিশ্চিত করুন",
+  "connecting": "সংযোগ হচ্ছে...",
+  "delete": "মুছে ফেলুন",
+  "exit": "বের হন",
+  "exitFullscreen": "ফুলস্ক্রিন থেকে বের হন",
+  "fullscreen": "ফুলস্ক্রিন",
+  "language": {
+    "bn": "বাংলা - Bengali",
+    "de": "Deutsch - German",
+    "en": "English - English",
+    "es": "Español - Spanish",
+    "fr": "Français - French",
+    "it": "Italiano - Italian",
+    "ja": "日本語 - Japanese",
+    "tr": "Türkçe - Turkish",
+    "pl": "Polski - Polish",
+    "vi": "Tiếng Việt - Vietnamese"
+  },
+  "loading": "লোড হচ্ছে...",
+  "next": "পরবর্তী",
+  "save": "সংরক্ষণ",
+  "seconds": "সেকেন্ড",
+  "skip": "এড়িয়ে যান",
+  "submit": "জমা দিন",
+  "close": "বন্ধ করুন",
+  "previous": "পূর্ববর্তী",
+  "changeLanguage": "ভাষা পরিবর্তন করুন"
+}

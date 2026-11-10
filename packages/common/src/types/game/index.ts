@@ -37,6 +37,8 @@ export interface Player {
   username: string
   points: number
   streak: number
+  deviceId?: string
+  deviceJoinCount?: number
 }
 
 export interface Answer {
@@ -96,11 +98,24 @@ export interface AutoAdvanceSettings {
   leaderboardDelay: number
 }
 
+export interface UltimateTimerSettings {
+  enable: boolean
+  duration: number
+}
+
 export interface GameSettings {
   generatedUsernames: boolean
   answersOnly: boolean
+  detectScreenSplit: boolean
+  pauseOnDisconnect: boolean
+  hidePlayerResults: boolean
   autoAdvance: AutoAdvanceSettings
+  ultimateTimer: UltimateTimerSettings
+  selfPaced: boolean
+  maxParticipants: number
 }
+
+export type SanitizedQuestion = Omit<Question, "solutions">
 
 export interface GameUpdateQuestion {
   current: number

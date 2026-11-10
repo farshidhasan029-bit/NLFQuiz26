@@ -1,6 +1,7 @@
 import { EVENTS } from "@razzia/common/constants"
 import { STATUS } from "@razzia/common/types/game/status"
 import GameWrapper from "@razzia/web/features/game/components/GameWrapper"
+import Loader from "@razzia/web/components/Loader"
 import {
   socketClient,
   useEvent,
@@ -14,6 +15,7 @@ import {
   isKeyOf,
 } from "@razzia/web/features/game/utils/constants"
 import { createStatus } from "@razzia/web/features/game/utils/createStatus"
+import { useAntiCheat } from "@razzia/web/features/game/hooks/useAntiCheat"
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
 import { useEffect, useRef } from "react"
 import toast from "react-hot-toast"
@@ -23,12 +25,17 @@ const PlayerGamePage = () => {
   const navigate = useNavigate()
   const { socket, isConnected } = useSocket()
   const { gameId: gameIdParam } = useParams({ from: "/party/$gameId" })
-  const { status, updatePlayer, resetPlayer } = usePlayerStore()
+  const { status, updatePlayer, resetPlayer, detectScreenSplit } = usePlayerStore()
   const { setQuestionStates } = useQuestionStore()
   const { t } = useTranslation()
   const syncedRef = useRef(false)
 
   useSocketConnection()
+  useAntiCheat({
+    enabled: detectScreenSplit,
+    gameId: gameIdParam,
+    statusName: status?.name,
+  })
 
   useEffect(() => {
     if (!isConnected) {
@@ -56,10 +63,18 @@ const PlayerGamePage = () => {
 
   useEvent(
     EVENTS.GAME.SUCCESS_JOIN,
-    ({ gameId: joinedGameId, username, gameMode }) => {
+    ({
+      gameId: joinedGameId,
+      username,
+      gameMode,
+      detectScreenSplit: serverDetectScreenSplit,
+      hidePlayerResults: serverHidePlayerResults,
+    }) => {
       updatePlayer({
         gameId: joinedGameId,
         gameMode,
+        detectScreenSplit: serverDetectScreenSplit ?? true,
+        hidePlayerResults: serverHidePlayerResults ?? true,
         joinTicket: null,
         player: { username, points: 0 },
         status: createStatus(STATUS.WAIT, { text: "game:waitingForPlayers" }),
@@ -72,6 +87,8 @@ const PlayerGamePage = () => {
     ({
       gameId: reconnectGameId,
       gameMode,
+      detectScreenSplit: serverDetectScreenSplit,
+      hidePlayerResults: serverHidePlayerResults,
       status: reconnectStatus,
       player,
       currentQuestion,
@@ -79,6 +96,8 @@ const PlayerGamePage = () => {
       updatePlayer({
         gameId: reconnectGameId,
         gameMode,
+        detectScreenSplit: serverDetectScreenSplit ?? true,
+        hidePlayerResults: serverHidePlayerResults ?? true,
         status: createStatus(reconnectStatus.name, reconnectStatus.data),
         player,
       })
@@ -88,7 +107,16 @@ const PlayerGamePage = () => {
 
   useEvent(EVENTS.GAME.STATUS, ({ name, data }) => {
     if (name in GAME_STATE_COMPONENTS) {
-      updatePlayer({ status: createStatus(name, data) })
+      const dataObj = data as { detectScreenSplit?: boolean; hidePlayerResults?: boolean } | undefined
+      updatePlayer({
+        status: createStatus(name, data),
+        ...(dataObj?.detectScreenSplit !== undefined && {
+          detectScreenSplit: dataObj.detectScreenSplit,
+        }),
+        ...(dataObj?.hidePlayerResults !== undefined && {
+          hidePlayerResults: dataObj.hidePlayerResults,
+        }),
+      })
     }
   })
 
@@ -111,11 +139,26 @@ const PlayerGamePage = () => {
       : null
 
   if (!status) {
-    return null
+    return (
+      <GameWrapper statusName={undefined}>
+        <div className="flex h-full w-full flex-1 flex-col items-center justify-center">
+          <Loader className="h-30" />
+          <h1 className="mt-4 text-center text-3xl font-bold text-white drop-shadow-lg">
+            {t("game:reconnecting")}
+          </h1>
+        </div>
+      </GameWrapper>
+    )
   }
 
   return (
     <GameWrapper statusName={status.name}>
+      {detectScreenSplit && (
+        <div className="mx-auto my-1 flex items-center justify-center gap-1.5 rounded-full bg-black/40 px-3 py-1 text-xs font-semibold text-white/90 drop-shadow">
+          <span>🛡️</span>
+          <span>{t("game:antiCheat.banner")}</span>
+        </div>
+      )}
       {CurrentComponent && <CurrentComponent data={status.data as never} />}
     </GameWrapper>
   )

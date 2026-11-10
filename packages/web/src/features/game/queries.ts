@@ -11,5 +11,9 @@ export const inviteCodeQuery = (inviteCode: string) =>
     staleTime: 0,
   })
 
-export const joinGame = (json: { inviteCode: string; username?: string }) =>
-  unwrap(api.games.join.$post({ json }))
+export const joinGame = (json: {
+  inviteCode: string
+  username?: string
+  deviceId?: string
+  deviceJoinCount?: number
+}) => unwrap(api.games.join.$post({ json }))

@@ -6,6 +6,12 @@ import Tooltip from "@razzia/web/components/Tooltip"
 import AutoAdvance from "@razzia/web/features/game/components/GameSettingsModal/AutoAdvance"
 import GeneratedUsernames from "@razzia/web/features/game/components/GameSettingsModal/GeneratedUsernames"
 import AnswersOnly from "@razzia/web/features/game/components/GameSettingsModal/AnswersOnly"
+import AntiCheat from "@razzia/web/features/game/components/GameSettingsModal/AntiCheat"
+import HidePlayerResults from "@razzia/web/features/game/components/GameSettingsModal/HidePlayerResults"
+import PauseOnDisconnect from "@razzia/web/features/game/components/GameSettingsModal/PauseOnDisconnect"
+import UltimateTimer from "@razzia/web/features/game/components/GameSettingsModal/UltimateTimer"
+import SelfPaced from "@razzia/web/features/game/components/GameSettingsModal/SelfPaced"
+import MaxParticipants from "@razzia/web/features/game/components/GameSettingsModal/MaxParticipants"
 import { useManagerStore } from "@razzia/web/features/game/stores/manager"
 import { updateGameSettings } from "@razzia/web/features/manager/queries"
 import { ApiError } from "@razzia/web/lib/api"
@@ -90,6 +96,12 @@ const GameSettingsModal = () => {
               <div className="min-h-0 flex-1 overflow-y-auto">
                 <GeneratedUsernames />
                 <AnswersOnly />
+                <AntiCheat />
+                <HidePlayerResults />
+                <PauseOnDisconnect />
+                <UltimateTimer />
+                <SelfPaced />
+                <MaxParticipants />
                 <AutoAdvance />
               </div>
 

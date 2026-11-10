@@ -5,6 +5,7 @@ import {
   ANSWERS_LABELS,
 } from "@razzia/web/features/game/utils/constants"
 import type { AnswerComponentProps } from "@razzia/web/features/questions/types"
+import { triggerHaptic, HAPTIC_PATTERNS } from "@razzia/web/lib/haptics"
 import clsx from "clsx"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -18,9 +19,13 @@ const MultiAnswers = ({
   const [selected, setSelected] = useState<number[]>([])
   const { t } = useTranslation()
 
-  const handleSubmit = () => onSubmit(selected)
+  const handleSubmit = () => {
+    triggerHaptic(HAPTIC_PATTERNS.LOCK)
+    onSubmit(selected)
+  }
 
   const toggle = (key: number) => {
+    triggerHaptic(HAPTIC_PATTERNS.TAP)
     setSelected((prev) =>
       prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
     )

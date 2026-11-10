@@ -55,11 +55,12 @@ export const mintJoinTicket = (
   sub: string,
   gameId: string,
   username?: string,
+  deviceId?: string,
 ): Promise<string> => {
   const iat = Math.floor(Date.now() / 1000)
 
   return sign(
-    { sub, gameId, username, iat, exp: iat + JOIN_TICKET_TTL },
+    { sub, gameId, username, deviceId, iat, exp: iat + JOIN_TICKET_TTL },
     jwtSecret,
     ALGORITHM,
   )

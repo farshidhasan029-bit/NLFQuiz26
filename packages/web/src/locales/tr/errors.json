@@ -24,7 +24,9 @@
     "managerDisconnected": "Yöneticinin bağlantısı kesildi",
     "noPlayersConnected": "Bağlı oyuncu yok",
     "notFound": "Oyun bulunamadı",
-    "playerAlreadyConnected": "Oyuncu zaten bağlı"
+    "playerAlreadyConnected": "Oyuncu zaten bağlı",
+    "expelledForCheating": "You have been expelled from the quiz for splitting your screen or switching windows",
+    "roomFull": "Bilgi yarışması odası maksimum katılımcı kapasitesine ulaştı"
   },
   "invalidRequest": "Geçersiz istek",
   "manager": {

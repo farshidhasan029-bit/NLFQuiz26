@@ -6,7 +6,8 @@
   "generatedUsernameNotice": "Po dołączeniu otrzymasz losowy pseudonim.",
   "hud": {
     "answers": "Odpowiedzi",
-    "time": "Czas"
+    "time": "Czas",
+    "timerStopped": "Zatrzymano stoper"
   },
   "media": {
     "showImage": "Pokaż obraz",
@@ -46,7 +47,32 @@
       "label": "Tylko odpowiedzi",
       "hint": "Gracze widzą tylko przyciski odpowiedzi oraz przycisk do ponownego przeczytania pytania."
     },
-    "title": "Ustawienia gry"
+    "title": "Ustawienia gry",
+    "antiCheat": {
+      "label": "Anti-Cheat Protection",
+      "hint": "Automatically expels participants who split their screen or switch windows during the quiz."
+    },
+    "hidePlayerResults": {
+      "label": "Wyniki i ranking tylko dla gospodarza",
+      "hint": "Tylko gospodarz widzi poprawne odpowiedzi i ranking. Uczestnicy widzą ekran oczekiwania."
+    },
+    "pauseOnDisconnect": {
+      "label": "Wstrzymaj stoper przy rozłączeniu",
+      "hint": "Automatycznie zatrzymuje odliczanie, gdy uczestnik jest offline, aby nie tracił czasu."
+    },
+    "ultimateTimer": {
+      "label": "Ostateczny licznik czasu quizu",
+      "hint": "Ustawia ogólny limit czasu na zakończenie quizu. Uczestnicy muszą odpowiedzieć na wszystkie pytania przed upływem czasu.",
+      "duration": "Całkowity czas (sekundy)"
+    },
+    "selfPaced": {
+      "label": "Tryb egzaminu we własnym tempie",
+      "hint": "Uczestnicy odpowiadają we własnym tempie, pomijają pytania i wracają do nich w dowolnym momencie"
+    },
+    "maxParticipants": {
+      "label": "Limit uczestników",
+      "hint": "Ogranicz liczbę uczestników mogących dołączyć (0 oznacza brak limitu)"
+    }
   },
   "startGame": "Start",
   "summary": {
@@ -64,5 +90,55 @@
   },
   "showQrCode": "Pokaż kod QR",
   "streak": "Seria poprawnych odpowiedzi",
-  "pinDigit": "Cyfra PIN nr {{position}}"
+  "pinDigit": "Cyfra PIN nr {{position}}",
+  "rank_ordinal_one": "{{count}}st place",
+  "rank_ordinal_two": "{{count}}nd place",
+  "rank_ordinal_few": "{{count}}rd place",
+  "antiCheat": {
+    "banner": "Anti-cheat active: Screen splitting or window switching will result in expulsion.",
+    "managerAlert": "{{username}} was expelled for screen-splitting / cheating."
+  },
+  "connectionDisrupted": "Network connection disrupted. Reconnecting... (Your progress is saved)",
+  "reconnecting": "Reconnecting to quiz... Your progress is saved",
+  "answerRecordedTitle": "Odpowiedź zapisana!",
+  "answerRecordedWaitHost": "Spójrz na ekran gospodarza, aby zobaczyć odpowiedzi i ranking.",
+  "hostRevealInProgress": "Gospodarz ujawnia wyniki",
+  "quizFinishedTitle": "Quiz zakończony!",
+  "quizFinishedWaitHost": "Dziękujemy za udział! Ostateczny ranking i zwycięzcy są prezentowani na ekranie gospodarza.",
+  "watchHostScreenPodium": "Zwycięzcy na ekranie gospodarza",
+  "timerStoppedOffline": "Urządzenie offline — Stoper zatrzymany. Ponowne łączenie...",
+  "timerStoppedGamePaused": "Quiz wstrzymany — Stoper zatrzymany",
+  "connectionDisruptedWithTimer": "Połączenie przerwane — Stoper zatrzymany na Twoim urządzeniu. Ponowne łączenie...",
+  "quizPausedPlayerOffline": "QUIZ WSTRZYMANY: {{username}} przeszedł w tryb offline — Stoper zatrzymany",
+  "quizPausedHost": "QUIZ WSTRZYMANY PRZEZ GOSPODARZA",
+  "ultimateTimerLabel": "Limit quizu",
+  "ultimateTimerExpired": "Koniec czasu! Ogólny limit czasu quizu minął.",
+  "deviceJoinCount": "Dołączono {{count}}x z tego urządzenia",
+  "skipQuestion": "Pomiń pytanie",
+  "previousQuestion": "Poprzednie",
+  "nextQuestion": "Następne",
+  "submitQuiz": "Prześlij quiz",
+  "submitQuizConfirmTitle": "Przesłać quiz?",
+  "submitQuizNow": "Prześlij odpowiedzi",
+  "submitQuizReady": "Odpowiedziałeś na wszystkie pytania. Gotowy do przesłania?",
+  "submitQuizWarningUnanswered": "Nadal masz pytania bez odpowiedzi. Czy na pewno chcesz przesłać teraz?",
+  "quizSubmittedWait": "Quiz przesłany! Poczekaj, aż gospodarz ujawni ostateczne wyniki.",
+  "finishQuiz": "Zakończ quiz",
+  "finishAndReveal": "Zakończ i pokaż wyniki",
+  "finishQuizConfirmTitle": "Zakończyć quiz wcześniej?",
+  "finishQuizConfirmDesc": "{{submitted}} z {{total}} uczestników przesłało odpowiedzi. Zakończenie teraz oceni obecne odpowiedzi.",
+  "finishQuizNow": "Zakończ quiz teraz",
+  "selfPacedExamTitle": "Tryb egzaminu we własnym tempie",
+  "examInProgress": "Quiz w toku",
+  "questionsTotal": "Pytania",
+  "answered": "Odpowiedziano",
+  "answeredBadge": "Odpowiedziano",
+  "skippedBadge": "Pominięte",
+  "unanswered": "Bez odpowiedzi",
+  "inProgressBadge": "W trakcie",
+  "submittedBadge": "Przesłano",
+  "unlimited": "Bez limitu",
+  "capacityReached": "Pełna pojemność",
+  "submitted": "Przesłano",
+  "questionLabel": "Pytanie"
 }

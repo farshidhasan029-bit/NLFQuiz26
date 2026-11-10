@@ -101,14 +101,28 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
         .catch(() => toast.error(t("errors:auth.sessionFailed")))
     }
 
+    const handleOnline = () => {
+      if (!socketClient.connected) {
+        socketClient.connect()
+      }
+    }
+
+    const handleOffline = () => {
+      setIsConnected(false)
+    }
+
     socketClient.on("connect", handleConnect)
     socketClient.on("disconnect", handleDisconnect)
     socketClient.on("connect_error", handleError)
+    window.addEventListener("online", handleOnline)
+    window.addEventListener("offline", handleOffline)
 
     return () => {
       socketClient.off("connect", handleConnect)
       socketClient.off("disconnect", handleDisconnect)
       socketClient.off("connect_error", handleError)
+      window.removeEventListener("online", handleOnline)
+      window.removeEventListener("offline", handleOffline)
       socketClient.disconnect()
     }
   }, [t])

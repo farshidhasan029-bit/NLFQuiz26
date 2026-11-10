@@ -5,7 +5,7 @@ import {
   QUIZZ_MODES,
   SCORING_MODES,
 } from "@razzia/common/constants"
-import type { Question, Quizz } from "@razzia/common/types/game"
+import type { GameSettings, Question, Quizz } from "@razzia/common/types/game"
 import { STATUS } from "@razzia/common/types/game/status"
 import {
   getPath,
@@ -28,9 +28,23 @@ const TICK_MS = 1000
 
 const MANAGER = "manager"
 
-const setup = (quizz: Quizz, players = ["Alice", "Bob"]) => {
+const setup = (
+  quizz: Quizz,
+  players = ["Alice", "Bob"],
+  settings: Partial<GameSettings> = {
+    hidePlayerResults: false,
+    pauseOnDisconnect: false,
+    selfPaced: false,
+  },
+) => {
   const fake = createFakeIo()
   const game = new Game(fake.io, MANAGER, quizz)
+  game.updateSettings({
+    hidePlayerResults: false,
+    pauseOnDisconnect: false,
+    selfPaced: false,
+    ...settings,
+  })
   const manager = fake.createSocket(MANAGER)
 
   game.reconnect(manager)
@@ -122,6 +136,34 @@ describe("joining a game", () => {
     expect(game.players.map((p) => p.username)).toEqual(["Bob"])
     expect(lastEvent("alice", EVENTS.GAME.RESET)?.data).toBe(
       "errors:game.kickedByManager",
+    )
+  })
+
+  it("automatically expels a player for cheating and blocks re-entry", () => {
+    const { game, lastEvent, createSocket } = setup(createQuizz([createQuestion()]))
+    const aliceSocket = createSocket("alice", "alice")
+
+    game.expelCheater(aliceSocket, "screen_split")
+
+    expect(game.players.map((p) => p.username)).toEqual(["Bob"])
+    expect(lastEvent("alice", EVENTS.GAME.RESET)?.data).toBe(
+      "errors:game.expelledForCheating",
+    )
+    expect(lastEvent(MANAGER, EVENTS.MANAGER.PLAYER_EXPELLED)?.data).toEqual({
+      playerId: "alice",
+      username: "Alice",
+      reason: "screen_split",
+    })
+
+    // Cheater cannot rejoin or reconnect
+    expect(game.isExpelled("alice")).toBe(true)
+    expect(game.join(createSocket("alice-attempt", "alice"), "Alice")).toBe(
+      "errors:game.expelledForCheating",
+    )
+    const newAliceSocket = createSocket("alice-reconnect", "alice")
+    game.reconnect(newAliceSocket)
+    expect(lastEvent("alice-reconnect", EVENTS.GAME.RESET)?.data).toBe(
+      "errors:game.expelledForCheating",
     )
   })
 })
@@ -666,5 +708,265 @@ describe("manager grace period", () => {
     await vi.advanceTimersByTimeAsync(GRACE_MS)
 
     expect(onTimeout).not.toHaveBeenCalled()
+  })
+})
+
+describe("hidePlayerResults (blind / competition mode)", () => {
+  it("hides question correctness, points, and rank from participants", async () => {
+    const question = createQuestion({ solutions: [0] })
+    const { game, sockets, status, start } = setup(
+      createQuizz([question]),
+      ["Alice", "Bob"],
+      { hidePlayerResults: true, pauseOnDisconnect: false },
+    )
+    const [alice, bob] = sockets
+
+    await start()
+    game.selectAnswer(alice, [0])
+    game.selectAnswer(bob, [1])
+    game.advance()
+    await vi.advanceTimersByTimeAsync(TICK_MS)
+
+    // Participants receive generic waiting state with no answer correctness or ranking
+    expect(status("alice")).toMatchObject({
+      name: STATUS.WAIT,
+      data: { text: "game:answerRecordedWaitHost" },
+    })
+    expect(status("bob")).toMatchObject({
+      name: STATUS.WAIT,
+      data: { text: "game:answerRecordedWaitHost" },
+    })
+
+    // Manager still receives full responses with solution counts
+    expect(status(MANAGER)).toMatchObject({
+      name: STATUS.SHOW_RESPONSES,
+      data: { responses: { 0: 1, 1: 1 } },
+    })
+  })
+
+  it("hides podium ranks from participants upon quiz finish", async () => {
+    const question = createQuestion({ solutions: [0] })
+    const { game, sockets, status, start } = setup(
+      createQuizz([question]),
+      ["Alice", "Bob"],
+      { hidePlayerResults: true, pauseOnDisconnect: false },
+    )
+    const [alice] = sockets
+
+    await start()
+    game.selectAnswer(alice, [0])
+    game.advance()
+    await vi.advanceTimersByTimeAsync(TICK_MS)
+
+    // Move to finish
+    game.advance()
+
+    // Host receives full top 3 podium
+    expect(status(MANAGER)).toMatchObject({
+      name: STATUS.FINISHED,
+      data: {
+        top: [{ username: "Alice", points: 1000 }, { username: "Bob" }],
+      },
+    })
+
+    // Participant receives FINISHED without rank or top list
+    expect(status("alice")).toMatchObject({
+      name: STATUS.FINISHED,
+      data: {
+        rank: undefined,
+        top: [],
+      },
+    })
+  })
+})
+
+describe("pauseOnDisconnect (offline timer freeze)", () => {
+  it("pauses the round timer when an unanswered player disconnects during question", async () => {
+    const { game, sockets, start, lastEvent } = setup(
+      createQuizz([createQuestion()]),
+      ["Alice", "Bob"],
+      { pauseOnDisconnect: true },
+    )
+    const [alice, bob] = sockets
+
+    await start()
+    expect(game.isPaused).toBe(false)
+
+    // Bob disconnects before answering
+    game.setPlayerDisconnected(bob.id)
+
+    expect(game.isPaused).toBe(true)
+    expect(lastEvent(game.gameId, EVENTS.GAME.PAUSE_UPDATE)?.data).toMatchObject({
+      paused: true,
+      reason: "player_offline",
+      username: "Bob",
+    })
+
+    // Alice answering does NOT end the round prematurely while game is paused and Bob is offline
+    game.selectAnswer(alice, [0])
+    await vi.advanceTimersByTimeAsync(TICK_MS)
+    expect(game.isPaused).toBe(true)
+  })
+
+  it("auto-resumes the round timer when the offline player reconnects", async () => {
+    const { game, sockets, start, createSocket, lastEvent } = setup(
+      createQuizz([createQuestion()]),
+      ["Alice", "Bob"],
+      { pauseOnDisconnect: true },
+    )
+    const [alice, bob] = sockets
+
+    await start()
+    game.setPlayerDisconnected(bob.id)
+    expect(game.isPaused).toBe(true)
+
+    // Bob reconnects
+    game.reconnect(createSocket("bob-new", "bob"))
+
+    expect(game.isPaused).toBe(false)
+    expect(lastEvent(game.gameId, EVENTS.GAME.PAUSE_UPDATE)?.data).toMatchObject({
+      paused: false,
+    })
+  })
+})
+
+describe("ultimateTimer (overall quiz time limit)", () => {
+  it("counts down and force-finishes the quiz when timer reaches 0", async () => {
+    const { game, start, lastEvent } = setup(
+      createQuizz([createQuestion({ time: 60 })]),
+      ["Alice", "Bob"],
+      {
+        ultimateTimer: {
+          enable: true,
+          duration: 30, // 30 seconds limit
+        },
+      },
+    )
+
+    await start()
+
+    // Timer starts and emits initial update
+    const initialEvent = lastEvent(game.gameId, EVENTS.GAME.ULTIMATE_TIMER_UPDATE)
+    expect(initialEvent?.data).toMatchObject({
+      active: true,
+      remaining: expect.any(Number),
+      total: 30,
+    })
+
+    // Advance 30 seconds
+    await vi.advanceTimersByTimeAsync(30 * TICK_MS)
+
+    // Quiz has expired and finished
+    expect(lastEvent(game.gameId, EVENTS.GAME.ULTIMATE_TIMER_EXPIRED)).toBeDefined()
+    expect(game.started).toBe(false)
+  })
+})
+
+describe("device tracking (same-device join records)", () => {
+  it("records device join count when deviceId is provided", () => {
+    const fake = createFakeIo()
+    const game = new Game(fake.io, "manager", createQuizz([createQuestion()]))
+    const socket1 = fake.createSocket("client1")
+    const socket2 = fake.createSocket("client2")
+
+    // First join from device "dev_phone_1"
+    game.join(socket1, "Alice", "dev_phone_1")
+    expect(game.players[0].deviceId).toBe("dev_phone_1")
+    expect(game.players[0].deviceJoinCount).toBe(1)
+
+    // Second join from same device "dev_phone_1"
+    game.join(socket2, "Bob", "dev_phone_1")
+    expect(game.players[1].deviceId).toBe("dev_phone_1")
+    expect(game.players[1].deviceJoinCount).toBe(2)
+  })
+})
+
+describe("maxParticipants (host participant capacity limit)", () => {
+  it("rejects joins when room capacity is reached", () => {
+    const fake = createFakeIo()
+    const game = new Game(fake.io, "manager", createQuizz([createQuestion()]))
+    game.updateSettings({ maxParticipants: 2 })
+
+    const socket1 = fake.createSocket("client1")
+    const socket2 = fake.createSocket("client2")
+    const socket3 = fake.createSocket("client3")
+
+    expect(game.join(socket1, "Alice")).toBeNull()
+    expect(game.join(socket2, "Bob")).toBeNull()
+    expect(game.players).toHaveLength(2)
+
+    // Third participant exceeds limit
+    const error = game.join(socket3, "Charlie")
+    expect(error).toBe("errors:game.roomFull")
+    expect(game.players).toHaveLength(2)
+  })
+})
+
+describe("selfPaced (exam mode with question skipping & revisiting)", () => {
+  it("broadcasts sanitized questions and allows answering, skipping, and submitting", async () => {
+    const q1 = createQuestion({ question: "Question 1", solutions: [1] })
+    const q2 = createQuestion({ question: "Question 2", solutions: [2] })
+    const quizz = createQuizz([q1, q2])
+
+    const fake = createFakeIo()
+    const game = new Game(fake.io, MANAGER, quizz)
+    game.updateSettings({ selfPaced: true, hidePlayerResults: false })
+    const manager = fake.createSocket(MANAGER)
+    game.reconnect(manager)
+
+    const alice = fake.createSocket("alice")
+    const bob = fake.createSocket("bob")
+    game.join(alice, "Alice")
+    game.join(bob, "Bob")
+
+    // Start quiz
+    void game.start(manager)
+    await vi.advanceTimersByTimeAsync(6000)
+
+    const quizStatus = fake.lastStatus(game.gameId)
+    expect(quizStatus?.name).toBe(STATUS.SELF_PACED_QUIZ)
+    const data = quizStatus?.data as any
+    expect(data.questions).toHaveLength(2)
+    // Check solutions are stripped for security
+    expect(data.questions[0].solutions).toBeUndefined()
+    expect(data.questions[1].solutions).toBeUndefined()
+
+    // Alice skips question 0 and answers question 1
+    game.skipQuestion(alice, 0)
+    let lastProgress = fake.lastEvent(manager.id, EVENTS.GAME.PLAYER_PROGRESS_UPDATE)
+    expect(lastProgress?.data).toMatchObject({
+      username: "Alice",
+      skippedCount: 1,
+      answeredCount: 0,
+    })
+
+    game.selectAnswer(alice, [2], 1)
+    lastProgress = fake.lastEvent(manager.id, EVENTS.GAME.PLAYER_PROGRESS_UPDATE)
+    expect(lastProgress?.data).toMatchObject({
+      username: "Alice",
+      skippedCount: 1,
+      answeredCount: 1,
+    })
+
+    // Alice revisits question 0 and answers it
+    game.selectAnswer(alice, [1], 0)
+    lastProgress = fake.lastEvent(manager.id, EVENTS.GAME.PLAYER_PROGRESS_UPDATE)
+    expect(lastProgress?.data).toMatchObject({
+      username: "Alice",
+      skippedCount: 0,
+      answeredCount: 2,
+    })
+
+    // Bob answers question 0 and submits
+    game.selectAnswer(bob, [1], 0)
+    game.submitQuiz(bob)
+
+    // Alice submits
+    game.submitQuiz(alice)
+
+    // Both submitted -> game auto-finishes and scores questions
+    expect(game.started).toBe(false)
+    const finishedStatus = fake.lastStatus(manager.id)
+    expect(finishedStatus?.name).toBe(STATUS.FINISHED)
   })
 })

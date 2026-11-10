@@ -1,5 +1,5 @@
 import { EVENTS } from "@razzia/common/constants"
-import type { Player, QuizzMode } from "@razzia/common/types/game"
+import type { GameSettings, Player, QuizzMode } from "@razzia/common/types/game"
 import type { Server, Socket } from "@razzia/common/types/game/socket"
 import { usernameValidator } from "@razzia/common/validators/auth"
 import { getClientId } from "@razzia/socket/utils/socket"
@@ -10,6 +10,7 @@ export interface PlayerManagerOptions {
   gameMode: QuizzMode
   getManagerId: () => string
   isStarted: () => boolean
+  getSettings?: () => GameSettings
 }
 
 export class PlayerManager {
@@ -18,7 +19,12 @@ export class PlayerManager {
   private readonly gameMode: QuizzMode
   private readonly getManagerId: () => string
   private readonly isStarted: () => boolean
+  private readonly getSettings?: () => GameSettings
   private players: Player[] = []
+  private readonly deviceRegistry = new Map<
+    string,
+    { count: number; usernames: string[]; firstSeen: number }
+  >()
 
   constructor({
     io,
@@ -26,19 +32,26 @@ export class PlayerManager {
     gameMode,
     getManagerId,
     isStarted,
+    getSettings,
   }: PlayerManagerOptions) {
     this.io = io
     this.gameId = gameId
     this.gameMode = gameMode
     this.getManagerId = getManagerId
     this.isStarted = isStarted
+    this.getSettings = getSettings
   }
 
-  join(socket: Socket, username: string): string | null {
+  join(socket: Socket, username: string, deviceId?: string): string | null {
     const clientId = getClientId(socket)
 
     if (this.findByClientId(clientId)) {
       return "errors:game.playerAlreadyConnected"
+    }
+
+    const limit = this.getSettings?.().maxParticipants
+    if (limit && limit > 0 && this.players.length >= limit) {
+      return "errors:game.roomFull"
     }
 
     const result = usernameValidator.safeParse(username)
@@ -49,6 +62,25 @@ export class PlayerManager {
 
     socket.join(this.gameId)
 
+    let deviceJoinCount = 1
+    if (deviceId) {
+      const record = this.deviceRegistry.get(deviceId)
+      if (record) {
+        record.count += 1
+        if (!record.usernames.includes(username)) {
+          record.usernames.push(username)
+        }
+        deviceJoinCount = record.count
+      } else {
+        this.deviceRegistry.set(deviceId, {
+          count: 1,
+          usernames: [username],
+          firstSeen: Date.now(),
+        })
+        deviceJoinCount = 1
+      }
+    }
+
     const player: Player = {
       id: socket.id,
       clientId,
@@ -56,6 +88,8 @@ export class PlayerManager {
       username,
       points: 0,
       streak: 0,
+      deviceId,
+      deviceJoinCount,
     }
 
     this.players.push(player)
@@ -65,12 +99,14 @@ export class PlayerManager {
       gameId: this.gameId,
       username,
       gameMode: this.gameMode,
+      detectScreenSplit: this.getSettings?.().detectScreenSplit ?? true,
+      hidePlayerResults: this.getSettings?.().hidePlayerResults ?? true,
     })
 
     return null
   }
 
-  kick(playerId: string): boolean {
+  kick(playerId: string, reason = "errors:game.kickedByManager"): boolean {
     const player = this.findById(playerId)
 
     if (!player) {
@@ -80,7 +116,7 @@ export class PlayerManager {
     this.players = this.players.filter((p) => p.id !== playerId)
 
     this.io.in(playerId).socketsLeave(this.gameId)
-    this.io.to(player.id).emit(EVENTS.GAME.RESET, "errors:game.kickedByManager")
+    this.io.to(player.id).emit(EVENTS.GAME.RESET, reason)
     this.io
       .to(this.getManagerId())
       .emit(EVENTS.MANAGER.PLAYER_KICKED, player.id)

@@ -6,7 +6,8 @@
   "generatedUsernameNotice": "Un pseudo aléatoire te sera attribué en rejoignant.",
   "hud": {
     "answers": "Réponses",
-    "time": "Temps"
+    "time": "Temps",
+    "timerStopped": "Minuteur arrêté"
   },
   "media": {
     "showImage": "Voir l'image",
@@ -47,7 +48,32 @@
       "label": "Réponses seules",
       "hint": "Les joueurs ne voient que les boutons de réponse, avec un bouton pour relire la question."
     },
-    "title": "Réglages de la partie"
+    "title": "Réglages de la partie",
+    "antiCheat": {
+      "label": "Anti-Cheat Protection",
+      "hint": "Automatically expels participants who split their screen or switch windows during the quiz."
+    },
+    "hidePlayerResults": {
+      "label": "Résultats et classement réservés à l'hôte",
+      "hint": "Seul l'hôte voit les bonnes réponses et le classement. Les participants voient un écran d'attente."
+    },
+    "pauseOnDisconnect": {
+      "label": "Pause du minuteur en cas de déconnexion",
+      "hint": "Suspend automatiquement le compte à rebours si un participant est hors ligne pour ne pas perdre de temps."
+    },
+    "ultimateTimer": {
+      "label": "Minuteur ultime du quiz",
+      "hint": "Définit une limite de temps globale pour la fin du quiz. Les participants doivent répondre à toutes les questions avant la fin du temps imparti.",
+      "duration": "Durée totale (secondes)"
+    },
+    "selfPaced": {
+      "label": "Mode examen autonome",
+      "hint": "Les participants répondent à leur propre rythme, passent des questions et y reviennent à tout moment"
+    },
+    "maxParticipants": {
+      "label": "Limite de participants",
+      "hint": "Limiter le nombre de participants pouvant rejoindre ce quiz (0 pour illimité)"
+    }
   },
   "startGame": "Démarrer",
   "summary": {
@@ -65,5 +91,54 @@
   },
   "showQrCode": "Afficher le QR code",
   "streak": "Série de bonnes réponses",
-  "pinDigit": "Chiffre {{position}} du code PIN"
+  "pinDigit": "Chiffre {{position}} du code PIN",
+  "rank_ordinal_two": "{{count}}nd place",
+  "rank_ordinal_few": "{{count}}rd place",
+  "antiCheat": {
+    "banner": "Anti-cheat active: Screen splitting or window switching will result in expulsion.",
+    "managerAlert": "{{username}} was expelled for screen-splitting / cheating."
+  },
+  "connectionDisrupted": "Network connection disrupted. Reconnecting... (Your progress is saved)",
+  "reconnecting": "Reconnecting to quiz... Your progress is saved",
+  "answerRecordedTitle": "Réponse enregistrée !",
+  "answerRecordedWaitHost": "Veuillez regarder l'écran de l'hôte pour les réponses et le classement.",
+  "hostRevealInProgress": "Révélation par l'hôte en cours",
+  "quizFinishedTitle": "Quiz terminé !",
+  "quizFinishedWaitHost": "Merci de votre participation ! Le classement final et les vainqueurs sont affichés sur l'écran de l'hôte.",
+  "watchHostScreenPodium": "Gagnants sur l'écran de l'hôte",
+  "timerStoppedOffline": "Appareil hors ligne — Minuteur arrêté. Reconnexion...",
+  "timerStoppedGamePaused": "Quiz en pause — Minuteur arrêté",
+  "connectionDisruptedWithTimer": "Connexion réseau interrompue — Minuteur arrêté sur votre appareil. Reconnexion...",
+  "quizPausedPlayerOffline": "QUIZ EN PAUSE : {{username}} est hors ligne — Minuteur arrêté",
+  "quizPausedHost": "QUIZ MIS EN PAUSE PAR L'HÔTE",
+  "ultimateTimerLabel": "Limite du quiz",
+  "ultimateTimerExpired": "Temps écoulé ! La limite de temps globale du quiz a expiré.",
+  "deviceJoinCount": "Rejoint {{count}}x depuis cet appareil",
+  "skipQuestion": "Passer la question",
+  "previousQuestion": "Précédent",
+  "nextQuestion": "Suivant",
+  "submitQuiz": "Soumettre le quiz",
+  "submitQuizConfirmTitle": "Soumettre le quiz ?",
+  "submitQuizNow": "Soumettre les réponses",
+  "submitQuizReady": "Vous avez répondu à toutes les questions. Prêt à soumettre ?",
+  "submitQuizWarningUnanswered": "Vous avez encore des questions sans réponse. Êtes-vous sûr de vouloir soumettre maintenant ?",
+  "quizSubmittedWait": "Quiz soumis ! Veuillez attendre que l'hôte révèle les résultats finaux.",
+  "finishQuiz": "Terminer le quiz",
+  "finishAndReveal": "Terminer et révéler les résultats",
+  "finishQuizConfirmTitle": "Terminer le quiz plus tôt ?",
+  "finishQuizConfirmDesc": "{{submitted}} sur {{total}} participants ont soumis. Terminer maintenant notera les réponses actuelles.",
+  "finishQuizNow": "Terminer le quiz maintenant",
+  "selfPacedExamTitle": "Mode examen à son propre rythme",
+  "examInProgress": "Quiz en cours",
+  "questionsTotal": "Questions",
+  "answered": "Répondu",
+  "answeredBadge": "Répondu",
+  "skippedBadge": "Passé",
+  "unanswered": "Sans réponse",
+  "inProgressBadge": "En cours",
+  "submittedBadge": "Soumis",
+  "unlimited": "Illimité",
+  "capacityReached": "Capacité maximale",
+  "submitted": "Soumis",
+  "questionLabel": "Question"
 }

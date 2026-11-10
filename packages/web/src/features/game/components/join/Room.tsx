@@ -6,6 +6,7 @@ import { usePlayerStore } from "@razzia/web/features/game/stores/player"
 import { ApiError } from "@razzia/web/lib/api"
 import { useMutation } from "@tanstack/react-query"
 import { useSearch } from "@tanstack/react-router"
+import { KeyRound } from "lucide-react"
 import { type SubmitEvent, useEffect, useRef, useState } from "react"
 import toast from "react-hot-toast"
 import { useTranslation } from "react-i18next"
@@ -44,11 +45,18 @@ const Room = () => {
   }, [pin, check])
 
   return (
-    <Card>
+    <Card className="w-full max-w-[92vw] sm:max-w-[440px]">
       <form onSubmit={handleJoin} className="flex flex-col">
-        <p className="mb-2 text-lg font-semibold">{t("game:pinLabel")}</p>
+        <div className="mb-4 flex items-center justify-center">
+          <div className="flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-1.5 border border-primary/25 shadow-sm">
+            <KeyRound className="size-4 text-primary" />
+            <p className="text-sm font-extrabold text-primary tracking-wide">
+              {t("game:pinLabel")}
+            </p>
+          </div>
+        </div>
         <PinInput value={invitation} onChange={setInvitation} />
-        <Button type="submit" className="mt-4" disabled={isPending}>
+        <Button type="submit" className="mt-5" disabled={isPending}>
           {t("common:submit")}
         </Button>
       </form>

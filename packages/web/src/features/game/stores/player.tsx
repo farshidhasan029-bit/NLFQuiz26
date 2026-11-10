@@ -14,6 +14,8 @@ interface PlayerState<T> {
   inviteCode: string | null
   gameMode: QuizzMode
   generatedUsernames: boolean
+  detectScreenSplit: boolean
+  hidePlayerResults: boolean
   joinTicket: string | null
   player: PlayerInfo | null
   status: Status<T> | null
@@ -28,20 +30,57 @@ type PlayerStore<T> = PlayerState<T> & {
   resetPlayer: () => void
 }
 
+const PLAYER_STORAGE_KEY = "player_progress"
+
+const readStoredPlayer = (): PlayerInfo | null => {
+  try {
+    if (typeof localStorage === "undefined") return null
+    const raw = localStorage.getItem(PLAYER_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+const writeStoredPlayer = (player: PlayerInfo | null | undefined) => {
+  try {
+    if (typeof localStorage === "undefined") return
+    if (player) {
+      localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify(player))
+    } else {
+      localStorage.removeItem(PLAYER_STORAGE_KEY)
+    }
+  } catch {
+    /* empty */
+  }
+}
+
 const initialState: PlayerState<StatusDataMap> = {
-  gameId: null,
-  inviteCode: null,
+  gameId: typeof localStorage !== "undefined" ? localStorage.getItem("game_id") : null,
+  inviteCode: typeof localStorage !== "undefined" ? localStorage.getItem("game_pin") : null,
   gameMode: QUIZZ_MODES.QUIZ,
   generatedUsernames: false,
+  detectScreenSplit: true,
+  hidePlayerResults: true,
   joinTicket: null,
-  player: null,
+  player: readStoredPlayer(),
   status: null,
 }
 
 export const usePlayerStore = create<PlayerStore<StatusDataMap>>((set) => ({
   ...initialState,
 
-  updatePlayer: (state) => set(state),
+  updatePlayer: (state) =>
+    set((current) => {
+      const next = typeof state === "function" ? state(current) : state
+      if (next.player !== undefined) {
+        writeStoredPlayer(next.player)
+      }
+      return next
+    }),
 
-  resetPlayer: () => set(initialState),
+  resetPlayer: () => {
+    writeStoredPlayer(null)
+    set(initialState)
+  },
 }))

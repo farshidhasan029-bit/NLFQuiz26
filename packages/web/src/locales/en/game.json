@@ -6,7 +6,8 @@
   "generatedUsernameNotice": "You will be given a random nickname when you join.",
   "hud": {
     "answers": "Answers",
-    "time": "Time"
+    "time": "Time",
+    "timerStopped": "Timer Stopped"
   },
   "media": {
     "showImage": "Show image",
@@ -49,8 +50,39 @@
       "label": "Answers only",
       "hint": "Players only see the answer buttons, with a button to read the question again."
     },
-    "title": "Game settings"
+    "antiCheat": {
+      "label": "Anti-Cheat Protection",
+      "hint": "Automatically expels participants who split their screen or switch windows during the quiz."
+    },
+    "title": "Game settings",
+    "hidePlayerResults": {
+      "label": "Host-only results & ranking",
+      "hint": "Only the host sees answer correctness and rankings. Participants see a clean waiting screen."
+    },
+    "pauseOnDisconnect": {
+      "label": "Pause timer on disconnect",
+      "hint": "Automatically freeze the round countdown if any participant goes offline so they do not lose time."
+    },
+    "ultimateTimer": {
+      "label": "Ultimate Quiz Timer",
+      "hint": "Sets an overall countdown time limit for the entire quiz to end. Participants must answer all questions before time runs out.",
+      "duration": "Total Duration (seconds)"
+    },
+    "selfPaced": {
+      "label": "Self-Paced Exam Mode",
+      "hint": "Participants answer at their own speed, skip questions, and revisit them anytime"
+    },
+    "maxParticipants": {
+      "label": "Participant Limit",
+      "hint": "Limit how many participants can join this quiz (0 for unlimited)"
+    }
   },
+  "antiCheat": {
+    "banner": "Anti-cheat active: Screen splitting or window switching will result in expulsion.",
+    "managerAlert": "{{username}} was expelled for screen-splitting / cheating."
+  },
+  "connectionDisrupted": "Network connection disrupted. Reconnecting... (Your progress is saved)",
+  "reconnecting": "Reconnecting to quiz... Your progress is saved",
   "startGame": "Start",
   "summary": {
     "title": "Survey complete",
@@ -67,5 +99,46 @@
   },
   "showQrCode": "Show QR code",
   "streak": "Answer streak",
-  "pinDigit": "PIN digit {{position}}"
+  "pinDigit": "PIN digit {{position}}",
+  "answerRecordedTitle": "Answer Recorded!",
+  "answerRecordedWaitHost": "Please watch the host screen for answers and leaderboard.",
+  "hostRevealInProgress": "Host reveal in progress",
+  "quizFinishedTitle": "Quiz Completed!",
+  "quizFinishedWaitHost": "Thank you for participating! Final rankings and winners are presented on the host screen.",
+  "watchHostScreenPodium": "Winners on host screen",
+  "timerStoppedOffline": "Device offline — Timer stopped. Reconnecting...",
+  "timerStoppedGamePaused": "Quiz Paused — Timer stopped",
+  "connectionDisruptedWithTimer": "Network connection disrupted — Timer stopped on your device. Reconnecting...",
+  "quizPausedPlayerOffline": "QUIZ PAUSED: {{username}} went offline — Timer stopped",
+  "quizPausedHost": "QUIZ PAUSED BY HOST",
+  "ultimateTimerLabel": "Quiz Limit",
+  "ultimateTimerExpired": "Time's Up! The overall quiz time limit has expired.",
+  "deviceJoinCount": "Joined {{count}}x from this device",
+  "skipQuestion": "Skip Question",
+  "previousQuestion": "Previous",
+  "nextQuestion": "Next",
+  "submitQuiz": "Submit Quiz",
+  "submitQuizConfirmTitle": "Submit Quiz?",
+  "submitQuizNow": "Submit Answers",
+  "submitQuizReady": "You have answered all questions. Ready to submit?",
+  "submitQuizWarningUnanswered": "You still have unanswered questions. Are you sure you want to submit now?",
+  "quizSubmittedWait": "Quiz submitted! Please wait for the host to reveal final results.",
+  "finishQuiz": "End Quiz",
+  "finishAndReveal": "End & Reveal Results",
+  "finishQuizConfirmTitle": "End Quiz Early?",
+  "finishQuizConfirmDesc": "{{submitted}} of {{total}} participants have submitted. Ending now will score current answers.",
+  "finishQuizNow": "End Quiz Now",
+  "selfPacedExamTitle": "Self-Paced Exam Mode",
+  "examInProgress": "Quiz In Progress",
+  "questionsTotal": "Questions",
+  "answered": "Answered",
+  "answeredBadge": "Answered",
+  "skippedBadge": "Skipped",
+  "unanswered": "Unanswered",
+  "inProgressBadge": "In Progress",
+  "submittedBadge": "Submitted",
+  "unlimited": "Unlimited",
+  "capacityReached": "Full Capacity",
+  "submitted": "Submitted",
+  "questionLabel": "Question"
 }

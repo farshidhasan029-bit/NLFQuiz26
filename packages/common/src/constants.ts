@@ -11,6 +11,11 @@ export const EVENTS = {
     RESET: "game:reset",
     UPDATE_QUESTION: "game:updateQuestion",
     PLAYER_ANSWER: "game:playerAnswer",
+    PAUSE_UPDATE: "game:pauseUpdate",
+    REACTION: "game:reaction",
+    ULTIMATE_TIMER_UPDATE: "game:ultimateTimerUpdate",
+    ULTIMATE_TIMER_EXPIRED: "game:ultimateTimerExpired",
+    PLAYER_PROGRESS_UPDATE: "game:playerProgressUpdate",
   },
   PLAYER: {
     SUCCESS_RECONNECT: "player:successReconnect",
@@ -19,6 +24,10 @@ export const EVENTS = {
     RECONNECT: "player:reconnect",
     LEAVE: "player:leave",
     SELECTED_ANSWER: "player:selectedAnswer",
+    SKIP_QUESTION: "player:skipQuestion",
+    SUBMIT_QUIZ: "player:submitQuiz",
+    CHEATING_DETECTED: "player:cheatingDetected",
+    SEND_REACTION: "player:sendReaction",
   },
   MANAGER: {
     SUCCESS_RECONNECT: "manager:successReconnect",
@@ -26,6 +35,7 @@ export const EVENTS = {
     NEW_PLAYER: "manager:newPlayer",
     REMOVE_PLAYER: "manager:removePlayer",
     PLAYER_KICKED: "manager:playerKicked",
+    PLAYER_EXPELLED: "manager:playerExpelled",
     PLAYER_UPDATED: "manager:playerUpdated",
     RECONNECT: "manager:reconnect",
     LEAVE: "manager:leave",
@@ -35,6 +45,8 @@ export const EVENTS = {
     AUTO_ADVANCE: "manager:autoAdvance",
     SET_LOCK: "manager:setLock",
     LOCK_UPDATED: "manager:lockUpdated",
+    PAUSE_GAME: "manager:pauseGame",
+    RESUME_GAME: "manager:resumeGame",
   },
 } as const
 
@@ -50,11 +62,20 @@ export const AUTO_ADVANCE_DELAY = { MIN: 3, MAX: 600 } as const
 export const createDefaultGameSettings = (): GameSettings => ({
   generatedUsernames: false,
   answersOnly: false,
+  detectScreenSplit: true,
+  pauseOnDisconnect: true,
+  hidePlayerResults: true,
   autoAdvance: {
-    enable: false,
-    responsesDelay: 10,
+    enable: true,
+    responsesDelay: 5,
     leaderboardDelay: 5,
   },
+  ultimateTimer: {
+    enable: false,
+    duration: 600,
+  },
+  selfPaced: true,
+  maxParticipants: 0,
 })
 
 export const MAX_POINTS = 1000

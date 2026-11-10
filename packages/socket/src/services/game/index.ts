@@ -57,6 +57,18 @@ class Game {
     string,
     { name: Status; data: StatusDataMap[Status] }
   >()
+  private expelledClientIds = new Set<string>()
+  private expelledDeviceIds = new Set<string>()
+
+  isExpelled(clientId: string, deviceId?: string): boolean {
+    if (this.expelledClientIds.has(clientId)) {
+      return true
+    }
+    if (deviceId && this.expelledDeviceIds.has(deviceId)) {
+      return true
+    }
+    return false
+  }
 
   constructor(io: Server, managerClientId: string, quizz: Quizz) {
     this.io = io
@@ -77,6 +89,7 @@ class Game {
       gameMode: quizz.gameMode,
       getManagerId: () => this._manager.id,
       isStarted: () => this.started,
+      getSettings: () => this.settings,
     })
 
     this.round = new RoundManager({
@@ -136,6 +149,18 @@ class Game {
     this.io.to(this._manager.id).emit(EVENTS.MANAGER.LOCK_UPDATED, locked)
   }
 
+  pauseGame() {
+    this.round.pauseGame()
+  }
+
+  resumeGame() {
+    this.round.resumeGame()
+  }
+
+  get isPaused(): boolean {
+    return this.round.isPaused
+  }
+
   // ── Status broadcasting ──────────────────────────────────────────────────
 
   private broadcastStatus<T extends Status>(status: T, data: StatusDataMap[T]) {
@@ -162,7 +187,12 @@ class Game {
 
   // Player actions
 
-  join(socket: Socket, username?: string): string | null {
+  join(socket: Socket, username?: string, deviceId?: string): string | null {
+    const clientId = getClientId(socket)
+    if (this.isExpelled(clientId, deviceId)) {
+      return "errors:game.expelledForCheating"
+    }
+
     if (this._locked) {
       return "errors:game.locked"
     }
@@ -170,18 +200,25 @@ class Game {
     if (this._settings.generatedUsernames) {
       const taken = this.playerManager.getAll().map((player) => player.username)
 
-      return this.playerManager.join(socket, createNickname(taken))
+      return this.playerManager.join(socket, createNickname(taken), deviceId)
     }
 
     if (!username) {
       return "errors:auth.usernameTooShort"
     }
 
-    return this.playerManager.join(socket, username)
+    return this.playerManager.join(socket, username, deviceId)
   }
 
+  private disconnectAutoResumeTimer: NodeJS.Timeout | null = null
+
   dispose() {
+    if (this.disconnectAutoResumeTimer) {
+      clearTimeout(this.disconnectAutoResumeTimer)
+      this.disconnectAutoResumeTimer = null
+    }
     this.round.clearAutoAdvance()
+    this.round.clearUltimateTimer()
     this.cooldown.abort()
     this.cancelManagerGrace()
   }
@@ -210,6 +247,36 @@ class Game {
     }
   }
 
+  expelCheater(socket: Socket, reason?: string) {
+    const clientId = getClientId(socket)
+    const player =
+      this.playerManager.findById(socket.id) ||
+      (clientId ? this.playerManager.findByClientId(clientId) : undefined)
+    if (!player) {
+      return
+    }
+
+    if (clientId) {
+      this.expelledClientIds.add(clientId)
+    }
+    if (player.deviceId) {
+      this.expelledDeviceIds.add(player.deviceId)
+    }
+
+    const username = player.username
+    const playerId = player.id
+    if (this.playerManager.kick(playerId, "errors:game.expelledForCheating")) {
+      this.playerStatus.delete(playerId)
+      this.playerStatus.delete(socket.id)
+      this.io.to(this._manager.id).emit(EVENTS.MANAGER.PLAYER_EXPELLED, {
+        playerId,
+        username,
+        reason: reason || "screen_split",
+      })
+      this.round.endIfEveryoneAnswered()
+    }
+  }
+
   // Reconnect
 
   reconnect(socket: Socket) {
@@ -218,6 +285,11 @@ class Game {
     if (this._manager.clientId === clientId) {
       this.reconnectManager(socket)
 
+      return
+    }
+
+    if (this.isExpelled(clientId)) {
+      socket.emit(EVENTS.GAME.RESET, "errors:game.expelledForCheating")
       return
     }
 
@@ -309,11 +381,32 @@ class Game {
     socket.emit(EVENTS.PLAYER.SUCCESS_RECONNECT, {
       gameId: this.gameId,
       gameMode: this.gameMode,
+      detectScreenSplit: this._settings.detectScreenSplit,
+      hidePlayerResults: this._settings.hidePlayerResults,
       currentQuestion: this.round.getReconnectInfo(),
       status,
       player: { username: player.username, points: player.points },
     })
+    const timerState = this.round.getUltimateTimerState()
+    if (timerState.active) {
+      socket.emit(EVENTS.GAME.ULTIMATE_TIMER_UPDATE, timerState)
+    }
     this.playerManager.broadcastCount()
+
+    // If game was auto-paused due to player disconnect, check if we can resume
+    if (this.round.isPaused && this.round.pauseReason === "player_offline") {
+      const remainingDisconnectedUnanswered = this.playerManager
+        .getAll()
+        .filter((p) => !p.connected && !this.round.hasPlayerAnswered(p.id))
+
+      if (remainingDisconnectedUnanswered.length === 0) {
+        if (this.disconnectAutoResumeTimer) {
+          clearTimeout(this.disconnectAutoResumeTimer)
+          this.disconnectAutoResumeTimer = null
+        }
+        this.round.resumeGame()
+      }
+    }
 
     console.log(
       `Player ${player.username} reconnected to game ${this.inviteCode}`,
@@ -340,9 +433,32 @@ class Game {
   setPlayerDisconnected(socketId: string, timedOut = false) {
     this.playerManager.setDisconnected(socketId)
     this.playerManager.broadcastCount()
-    this.round.endIfEveryoneAnswered()
 
     const player = this.playerManager.findById(socketId)
+
+    if (
+      this._settings.pauseOnDisconnect &&
+      this.started &&
+      this.round.isAskingQuestion() &&
+      player &&
+      !this.round.hasPlayerAnswered(socketId)
+    ) {
+      this.round.pauseGame("player_offline", player.username)
+
+      if (!this.disconnectAutoResumeTimer) {
+        this.disconnectAutoResumeTimer = setTimeout(() => {
+          this.disconnectAutoResumeTimer = null
+          if (
+            this.round.isPaused &&
+            this.round.pauseReason === "player_offline"
+          ) {
+            this.round.resumeGame()
+          }
+        }, 45 * SECOND_MS)
+      }
+    }
+
+    this.round.endIfEveryoneAnswered()
 
     if (player) {
       this.notifyPlayerUpdated(socketId, player, timedOut)
@@ -377,8 +493,16 @@ class Game {
     await this.round.start(socket)
   }
 
-  selectAnswer(socket: Socket, answerIds: number[]) {
-    this.round.selectAnswer(socket, answerIds)
+  selectAnswer(socket: Socket, answerIds: number[], questionIndex?: number) {
+    this.round.selectAnswer(socket, answerIds, questionIndex)
+  }
+
+  skipQuestion(socket: Socket, questionIndex: number) {
+    this.round.skipQuestion(socket, questionIndex)
+  }
+
+  submitQuiz(socket: Socket) {
+    this.round.submitQuiz(socket)
   }
 
   advance() {

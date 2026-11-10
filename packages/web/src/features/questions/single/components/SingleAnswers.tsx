@@ -4,6 +4,7 @@ import {
   ANSWERS_LABELS,
 } from "@razzia/web/features/game/utils/constants"
 import type { AnswerComponentProps } from "@razzia/web/features/questions/types"
+import { triggerHaptic, HAPTIC_PATTERNS } from "@razzia/web/lib/haptics"
 import clsx from "clsx"
 
 const SingleAnswers = ({
@@ -12,7 +13,10 @@ const SingleAnswers = ({
   readOnly,
   fill,
 }: AnswerComponentProps) => {
-  const handleSubmit = (key: number) => onSubmit([key])
+  const handleSubmit = (key: number) => {
+    triggerHaptic(HAPTIC_PATTERNS.TAP)
+    onSubmit([key])
+  }
 
   return (
     <div

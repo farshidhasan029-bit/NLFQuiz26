@@ -24,7 +24,9 @@
     "managerDisconnected": "Gestore disconnesso",
     "noPlayersConnected": "Nessun giocatore connesso",
     "notFound": "Partita non trovata",
-    "playerAlreadyConnected": "Giocatore già connesso"
+    "playerAlreadyConnected": "Giocatore già connesso",
+    "expelledForCheating": "You have been expelled from the quiz for splitting your screen or switching windows",
+    "roomFull": "La stanza del quiz ha raggiunto la capacità massima di partecipanti"
   },
   "invalidRequest": "Richiesta non valida",
   "manager": {

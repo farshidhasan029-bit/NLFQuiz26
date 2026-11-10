@@ -17,6 +17,7 @@ import type {
   QuestionResult,
   Quizz,
   QuizzMode,
+  SanitizedQuestion,
 } from "@razzia/common/types/game"
 import type { Server, Socket } from "@razzia/common/types/game/socket"
 import {
@@ -80,6 +81,96 @@ export class RoundManager {
   private tempOldLeaderboard: Player[] | null = null
   private questionsHistory: QuestionResult[] = []
   private autoAdvanceTimer: NodeJS.Timeout | null = null
+  private paused = false
+  private ultimateTimerInterval: NodeJS.Timeout | null = null
+  private ultimateRemaining = 0
+  private ultimateTotal = 0
+  private playerPacedMap = new Map<
+    string,
+    { answers: Map<number, number[]>; skipped: Set<number>; finished: boolean }
+  >()
+  private sanitizedQuestions: SanitizedQuestion[] = []
+
+  getUltimateTimerState() {
+    const settings = this.opts.getSettings()
+    return {
+      active: Boolean(settings.ultimateTimer?.enable),
+      remaining: this.ultimateRemaining,
+      total: this.ultimateTotal,
+      paused: this.paused,
+    }
+  }
+
+  private emitUltimateTimer() {
+    this.opts.io.to(this.opts.gameId).emit(
+      EVENTS.GAME.ULTIMATE_TIMER_UPDATE,
+      this.getUltimateTimerState(),
+    )
+  }
+
+  clearUltimateTimer(): void {
+    if (this.ultimateTimerInterval) {
+      clearInterval(this.ultimateTimerInterval)
+      this.ultimateTimerInterval = null
+    }
+  }
+
+  private startUltimateTimer(): void {
+    this.clearUltimateTimer()
+    const settings = this.opts.getSettings()
+    if (!settings.ultimateTimer?.enable || settings.ultimateTimer.duration <= 0) {
+      return
+    }
+
+    this.ultimateTotal = settings.ultimateTimer.duration
+    this.ultimateRemaining = settings.ultimateTimer.duration
+
+    this.emitUltimateTimer()
+
+    this.ultimateTimerInterval = setInterval(() => {
+      if (this.paused) {
+        return
+      }
+
+      this.ultimateRemaining -= 1
+      this.emitUltimateTimer()
+
+      if (this.ultimateRemaining <= 0) {
+        this.clearUltimateTimer()
+        this.handleUltimateTimerExpired()
+      }
+    }, SECOND_MS)
+  }
+
+  private handleUltimateTimerExpired(): void {
+    if (!this.started) {
+      return
+    }
+
+    this.opts.io.to(this.opts.gameId).emit(EVENTS.GAME.ULTIMATE_TIMER_EXPIRED)
+
+    if (this.opts.getSettings().selfPaced) {
+      this.finalizeSelfPacedQuiz()
+      return
+    }
+
+    if (this.isAskingQuestion()) {
+      this.acceptingAnswers = false
+      this.opts.cooldown.abort()
+      const currentPlayers = this.opts.players.getAll()
+      const sortedPlayers = scoreQuestion(
+        this.question,
+        currentPlayers,
+        this.playersAnswers,
+      )
+      this.opts.players.replace(sortedPlayers)
+      this.recordHistory(currentPlayers, sortedPlayers)
+      this.leaderboard = sortedPlayers
+      this.playersAnswers = []
+    }
+
+    this.finish()
+  }
 
   constructor(opts: RoundManagerOptions) {
     this.opts = opts
@@ -117,8 +208,12 @@ export class RoundManager {
     return this.opts.quizz.questions[this.currentQuestion]
   }
 
-  private isAskingQuestion(): boolean {
+  isAskingQuestion(): boolean {
     return this.currentStep < 0
+  }
+
+  hasPlayerAnswered(playerId: string): boolean {
+    return this.playersAnswers.some((a) => a.playerId === playerId)
   }
 
   private isLastQuestion(): boolean {
@@ -166,6 +261,10 @@ export class RoundManager {
     this.emitAutoAdvance({ seconds: remaining, total: delay })
 
     this.autoAdvanceTimer = setInterval(() => {
+      if (this.paused) {
+        return
+      }
+
       remaining -= 1
 
       if (remaining > 0) {
@@ -177,6 +276,53 @@ export class RoundManager {
       this.clearAutoAdvance()
       this.advance()
     }, SECOND_MS)
+  }
+
+  private _pauseReason: string | null = null
+  private _pauseUsername: string | null = null
+
+  get isPaused(): boolean {
+    return this.paused
+  }
+
+  get pauseReason(): string | null {
+    return this._pauseReason
+  }
+
+  get pauseUsername(): string | null {
+    return this._pauseUsername
+  }
+
+  pauseGame(reason = "manager", username?: string): void {
+    if (!this.started || this.paused) {
+      return
+    }
+
+    this.paused = true
+    this._pauseReason = reason
+    this._pauseUsername = username ?? null
+    this.opts.cooldown.pause()
+    this.opts.io.to(this.opts.gameId).emit(EVENTS.GAME.PAUSE_UPDATE, {
+      paused: true,
+      reason,
+      username,
+    })
+    this.emitUltimateTimer()
+  }
+
+  resumeGame(): void {
+    if (!this.started || !this.paused) {
+      return
+    }
+
+    this.paused = false
+    this._pauseReason = null
+    this._pauseUsername = null
+    this.opts.cooldown.resume()
+    this.opts.io.to(this.opts.gameId).emit(EVENTS.GAME.PAUSE_UPDATE, {
+      paused: false,
+    })
+    this.emitUltimateTimer()
   }
 
   // ── Flow ─────────────────────────────────────────────────────────────────
@@ -204,6 +350,7 @@ export class RoundManager {
     }
 
     this.started = true
+    this.startUltimateTimer()
 
     this.opts.broadcast(STATUS.SHOW_START, {
       time: 3,
@@ -215,11 +362,130 @@ export class RoundManager {
     this.opts.io.to(this.opts.gameId).emit(EVENTS.GAME.START_COOLDOWN)
     await this.opts.cooldown.start(3)
 
+    if (!this.started) {
+      return
+    }
+
+    if (this.opts.getSettings().selfPaced) {
+      this.startSelfPaced()
+      return
+    }
+
     void this.newQuestion()
+  }
+
+  private startSelfPaced(): void {
+    this.sanitizedQuestions = this.opts.quizz.questions.map((q) => {
+      const { solutions, ...rest } = q
+      return rest
+    })
+
+    this.playerPacedMap.clear()
+    for (const player of this.opts.players.getAll()) {
+      this.playerPacedMap.set(player.id, {
+        answers: new Map<number, number[]>(),
+        skipped: new Set<number>(),
+        finished: false,
+      })
+    }
+
+    const payload = {
+      questions: this.sanitizedQuestions,
+      totalQuestions: this.sanitizedQuestions.length,
+      gameMode: this.opts.quizz.gameMode,
+      detectScreenSplit: this.opts.getSettings().detectScreenSplit,
+      hidePlayerResults: this.opts.getSettings().hidePlayerResults,
+    }
+
+    this.opts.broadcast(STATUS.SELF_PACED_QUIZ, payload)
+    this.emitAllPlayerProgress()
+  }
+
+  private emitPlayerProgress(playerId: string): void {
+    const player = this.opts.players.findById(playerId)
+    const state = this.playerPacedMap.get(playerId)
+    if (!player || !state) {
+      return
+    }
+
+    this.opts.io
+      .to(this.opts.getManagerId())
+      .emit(EVENTS.GAME.PLAYER_PROGRESS_UPDATE, {
+        playerId: player.id,
+        username: player.username,
+        answeredCount: state.answers.size,
+        skippedCount: state.skipped.size,
+        totalQuestions: this.sanitizedQuestions.length,
+        finished: state.finished,
+      })
+  }
+
+  private emitAllPlayerProgress(): void {
+    for (const player of this.opts.players.getAll()) {
+      this.emitPlayerProgress(player.id)
+    }
+  }
+
+  finalizeSelfPacedQuiz(): void {
+    if (!this.started) {
+      return
+    }
+
+    const currentPlayers = this.opts.players.getAll()
+
+    // Score every question based on participants' recorded answers
+    for (let i = 0; i < this.opts.quizz.questions.length; i++) {
+      const q = this.opts.quizz.questions[i]
+      const questionAnswers: Answer[] = []
+
+      for (const player of currentPlayers) {
+        const pState = this.playerPacedMap.get(player.id)
+        const pAns = pState?.answers.get(i)
+        if (pAns) {
+          const points = q.maxPoints ?? MAX_POINTS
+          questionAnswers.push({
+            playerId: player.id,
+            answerIds: pAns,
+            points,
+          })
+        }
+      }
+
+      const sorted = scoreQuestion(q, currentPlayers, questionAnswers)
+      this.opts.players.replace(sorted)
+
+      this.questionsHistory.push({
+        ...q,
+        solutions: this.isSurvey() ? undefined : q.solutions,
+        playerAnswers: currentPlayers.map((player) => {
+          const pScore = sorted.find((s) => s.id === player.id)
+          const pAns = this.playerPacedMap.get(player.id)?.answers.get(i)
+          return {
+            playerName: player.username,
+            answerIds: pAns ?? null,
+            ...(pScore && {
+              correct: pScore.lastCorrect,
+              points: pScore.lastPoints,
+            }),
+          }
+        }),
+      })
+    }
+
+    const finalSorted = [...currentPlayers].sort((a, b) => b.points - a.points)
+    this.opts.players.replace(finalSorted)
+    this.leaderboard = finalSorted
+
+    this.finish()
   }
 
   advance(): void {
     if (!this.started) {
+      return
+    }
+
+    if (this.opts.getSettings().selfPaced) {
+      this.finalizeSelfPacedQuiz()
       return
     }
 
@@ -324,6 +590,7 @@ export class RoundManager {
       questionType: this.question.type,
       options: this.question.options,
       answersOnly: this.opts.getSettings().answersOnly,
+      detectScreenSplit: this.opts.getSettings().detectScreenSplit,
     })
 
     await this.opts.cooldown.start(this.question.time)
@@ -399,17 +666,25 @@ export class RoundManager {
 
     this.opts.players.replace(sortedPlayers)
 
-    sortedPlayers.forEach((player, index) => {
-      const aheadPlayer = sortedPlayers[index - 1]
+    const hidePlayerResults = this.opts.getSettings().hidePlayerResults
 
-      this.opts.send(player.id, STATUS.SHOW_RESULT, {
-        correct: player.lastCorrect,
-        message: player.lastCorrect ? "game:correct" : "game:wrong",
-        points: player.lastPoints,
-        myPoints: player.points,
-        rank: index + 1,
-        aheadOfMe: aheadPlayer ? aheadPlayer.username : null,
-      })
+    sortedPlayers.forEach((player, index) => {
+      if (hidePlayerResults) {
+        this.opts.send(player.id, STATUS.WAIT, {
+          text: "game:answerRecordedWaitHost",
+        })
+      } else {
+        const aheadPlayer = sortedPlayers[index - 1]
+
+        this.opts.send(player.id, STATUS.SHOW_RESULT, {
+          correct: player.lastCorrect,
+          message: player.lastCorrect ? "game:correct" : "game:wrong",
+          points: player.lastPoints,
+          myPoints: player.points,
+          rank: index + 1,
+          aheadOfMe: aheadPlayer ? aheadPlayer.username : null,
+        })
+      }
     })
 
     this.opts.send(this.opts.getManagerId(), STATUS.SHOW_RESPONSES, {
@@ -454,6 +729,7 @@ export class RoundManager {
   private finish(): void {
     this.started = false
     this.clearAutoAdvance()
+    this.clearUltimateTimer()
 
     const finalPlayers = this.isSurvey()
       ? this.opts.players.getAll()
@@ -487,11 +763,13 @@ export class RoundManager {
       top,
     })
 
+    const hidePlayerResults = this.opts.getSettings().hidePlayerResults
+
     this.leaderboard.forEach((player, index) => {
       this.opts.send(player.id, STATUS.FINISHED, {
         subject: this.opts.quizz.subject,
-        top,
-        rank: index + 1,
+        top: hidePlayerResults ? [] : top,
+        rank: hidePlayerResults ? undefined : index + 1,
       })
     })
   }
@@ -518,7 +796,12 @@ export class RoundManager {
     return [Math.min(options.max, Math.max(options.min, value))]
   }
 
-  selectAnswer(socket: Socket, answerIds: number[]): void {
+  selectAnswer(socket: Socket, answerIds: number[], questionIndex?: number): void {
+    if (this.opts.getSettings().selfPaced) {
+      this.selectAnswerSelfPaced(socket, answerIds, questionIndex)
+      return
+    }
+
     const player = this.opts.players.findById(socket.id)
 
     if (!player || !this.acceptingAnswers) {
@@ -568,18 +851,143 @@ export class RoundManager {
     this.endIfEveryoneAnswered()
   }
 
+  private selectAnswerSelfPaced(
+    socket: Socket,
+    answerIds: number[],
+    questionIndex?: number,
+  ): void {
+    if (!this.started) {
+      return
+    }
+
+    const state = this.playerPacedMap.get(socket.id)
+    if (!state || state.finished) {
+      return
+    }
+
+    if (
+      questionIndex === undefined ||
+      questionIndex < 0 ||
+      questionIndex >= this.sanitizedQuestions.length
+    ) {
+      return
+    }
+
+    const question = this.opts.quizz.questions[questionIndex]
+    if (!question) {
+      return
+    }
+
+    let submitted = answerIds
+    if (isEstimationOptions(question.options)) {
+      const value = answerIds.at(0)
+      if (
+        answerIds.length === 1 &&
+        value !== undefined &&
+        Number.isFinite(value)
+      ) {
+        submitted = [
+          Math.min(question.options.max, Math.max(question.options.min, value)),
+        ]
+      } else {
+        return
+      }
+    }
+
+    state.answers.set(questionIndex, submitted)
+    state.skipped.delete(questionIndex)
+
+    this.emitPlayerProgress(socket.id)
+  }
+
+  skipQuestion(socket: Socket, questionIndex: number): void {
+    if (!this.started || !this.opts.getSettings().selfPaced) {
+      return
+    }
+
+    const state = this.playerPacedMap.get(socket.id)
+    if (!state || state.finished) {
+      return
+    }
+
+    if (questionIndex < 0 || questionIndex >= this.sanitizedQuestions.length) {
+      return
+    }
+
+    if (!state.answers.has(questionIndex)) {
+      state.skipped.add(questionIndex)
+    }
+
+    this.emitPlayerProgress(socket.id)
+  }
+
+  submitQuiz(socket: Socket): void {
+    if (!this.started || !this.opts.getSettings().selfPaced) {
+      return
+    }
+
+    const state = this.playerPacedMap.get(socket.id)
+    if (!state || state.finished) {
+      return
+    }
+
+    state.finished = true
+    this.opts.send(socket.id, STATUS.WAIT, {
+      text: "game:quizSubmittedWait",
+    })
+    this.emitPlayerProgress(socket.id)
+
+    const allConnected = this.opts.players.getAll().filter((p) => p.connected)
+    const allDone =
+      allConnected.length > 0 &&
+      allConnected.every((p) => this.playerPacedMap.get(p.id)?.finished)
+
+    if (allDone) {
+      this.finalizeSelfPacedQuiz()
+    }
+  }
+
   updatePlayerId(oldId: string, newId: string): void {
     this.playersAnswers = this.playersAnswers.map((answer) =>
       answer.playerId === oldId ? { ...answer, playerId: newId } : answer,
     )
+    const existingPaced = this.playerPacedMap.get(oldId)
+    if (existingPaced) {
+      this.playerPacedMap.delete(oldId)
+      this.playerPacedMap.set(newId, existingPaced)
+    }
   }
 
   endIfEveryoneAnswered(): void {
+    if (this.opts.getSettings().selfPaced) {
+      const allConnected = this.opts.players.getAll().filter((p) => p.connected)
+      const allDone =
+        allConnected.length > 0 &&
+        allConnected.every((p) => this.playerPacedMap.get(p.id)?.finished)
+
+      if (allDone) {
+        this.finalizeSelfPacedQuiz()
+      }
+      return
+    }
+
     if (!this.acceptingAnswers) {
       return
     }
 
-    const connected = this.opts.players.getAll().filter((p) => p.connected)
+    const allPlayers = this.opts.players.getAll()
+    const connected = allPlayers.filter((p) => p.connected)
+    const disconnectedUnanswered = allPlayers.filter(
+      (p) => !p.connected && !this.hasPlayerAnswered(p.id),
+    )
+
+    if (
+      this.opts.getSettings().pauseOnDisconnect &&
+      disconnectedUnanswered.length > 0
+    ) {
+      return
+    }
+
     const everyoneAnswered = connected.every((player) =>
       this.playersAnswers.some((a) => a.playerId === player.id),
     )

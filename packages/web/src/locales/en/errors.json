@@ -18,13 +18,15 @@
     "expired": "Game expired",
     "invalidAutoAdvanceDelay": "Delay must be between 3 and 600 seconds",
     "kickedByManager": "You have been kicked by the manager",
+    "expelledForCheating": "You have been expelled from the quiz for splitting your screen or switching windows",
     "locked": "Game locked",
     "managerAlreadyConnected": "Manager already connected",
     "managerCannotJoin": "You cannot join your own game",
     "managerDisconnected": "Manager disconnected",
     "noPlayersConnected": "No players connected",
     "notFound": "Game not found",
-    "playerAlreadyConnected": "Player already connected"
+    "playerAlreadyConnected": "Player already connected",
+    "roomFull": "Quiz room has reached maximum capacity of participants"
   },
   "invalidRequest": "Invalid request",
   "manager": {

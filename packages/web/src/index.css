@@ -2,13 +2,13 @@
 @import "tailwindcss-animated";
 
 @theme {
-  --color-primary: #ff9900;
-  --color-secondary: #1a140b;
-  --color-answer-1: #e69f00;
-  --color-answer-2: #56b4e9;
-  --color-answer-3: #3dbfa0;
-  --color-answer-4: #cc79a7;
-  --color-correct: var(--color-green-500);
+  --color-primary: #6366f1;
+  --color-secondary: #0f172a;
+  --color-answer-1: #ef4444;
+  --color-answer-2: #0284c7;
+  --color-answer-3: #10b981;
+  --color-answer-4: #f59e0b;
+  --color-correct: #10b981;
 
   --color-background: var(--color-white);
 
@@ -21,6 +21,52 @@
   --font-display: "Rubik Variable", sans-serif;
 
   --animate-fade: fade 150ms ease both;
+}
+
+@keyframes floatOrb1 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(45px, -35px) scale(1.12);
+  }
+}
+
+@keyframes floatOrb2 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(-40px, 30px) scale(1.08);
+  }
+}
+
+@keyframes floatOrb3 {
+  0%, 100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  50% {
+    transform: translate(30px, 40px) scale(0.95);
+  }
+}
+
+.animate-orb-1 {
+  animation: floatOrb1 14s ease-in-out infinite;
+}
+
+.animate-orb-2 {
+  animation: floatOrb2 18s ease-in-out infinite;
+}
+
+.animate-orb-3 {
+  animation: floatOrb3 16s ease-in-out infinite;
+}
+
+.bg-grid-pattern {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
 }
 
 @layer base {
@@ -275,4 +321,29 @@ button:not(:disabled),
   100% {
     transform: scale(1);
   }
+}
+
+@keyframes floatUpReaction {
+  0% {
+    opacity: 0;
+    transform: translateY(0) scale(0.6) rotate(0deg);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(-40px) scale(1.2) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(-220px) scale(1.1) rotate(6deg);
+  }
+  80% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-500px) scale(0.8) rotate(-10deg);
+  }
+}
+
+.animate-float-reaction {
+  animation: floatUpReaction 2.5s ease-out forwards;
 }

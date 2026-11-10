@@ -3,6 +3,7 @@ import CricleCheck from "@razzia/web/features/game/components/icons/CricleCheck"
 import CricleXmark from "@razzia/web/features/game/components/icons/CricleXmark"
 import { usePlayerStore } from "@razzia/web/features/game/stores/player"
 import { SFX } from "@razzia/web/features/game/utils/constants"
+import { triggerHaptic, HAPTIC_PATTERNS } from "@razzia/web/lib/haptics"
 import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import useSound from "use-sound"
@@ -25,8 +26,9 @@ const Result = ({
     updatePlayer(({ player }) => ({ player: { ...player, points: myPoints } }))
 
     sfxResults()
+    triggerHaptic(correct ? HAPTIC_PATTERNS.SUCCESS : HAPTIC_PATTERNS.ERROR)
     // oxlint-disable-next-line
-  }, [sfxResults])
+  }, [sfxResults, correct])
 
   return (
     <section className="anim-show relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center">

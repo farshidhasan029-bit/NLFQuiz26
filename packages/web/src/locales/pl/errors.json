@@ -24,7 +24,9 @@
     "managerDisconnected": "Prowadzący się rozłączył",
     "noPlayersConnected": "Brak połączonych graczy",
     "notFound": "Nie znaleziono gry",
-    "playerAlreadyConnected": "Gracz jest już połączony"
+    "playerAlreadyConnected": "Gracz jest już połączony",
+    "expelledForCheating": "You have been expelled from the quiz for splitting your screen or switching windows",
+    "roomFull": "Pokój quizu osiągnął maksymalną liczbę uczestników"
   },
   "invalidRequest": "Nieprawidłowe żądanie",
   "manager": {

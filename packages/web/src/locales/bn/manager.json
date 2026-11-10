@@ -1,0 +1,52 @@
+{
+  "configurationsTitle": "কনফিগারেশন",
+  "logout": "লগআউট",
+  "passwordPlaceholder": "পাসওয়ার্ড",
+  "quizz": {
+    "create": "কুইজ তৈরি করুন",
+    "delete": "কুইজ মুছুন",
+    "deleteConfirm": "আপনি কি নিশ্চিত যে \"{{name}}\" মুছে ফেলতে চান? এই কাজটি পুনরায় ফিরিয়ে আনা যাবে না।",
+    "deleted": "কুইজ মুছে ফেলা হয়েছে",
+    "export": "JSON হিসেবে কুইজ এক্সপোর্ট করুন",
+    "import": "JSON থেকে কুইজ ইমপোর্ট করুন",
+    "none": "এখনও কোনো কুইজ তৈরি করা হয়নি",
+    "notFound": "কোনো কুইজ পাওয়া যায়নি",
+    "pleaseCreate": "অনুগ্রহ করে প্রথমে একটি কুইজ তৈরি করুন",
+    "pleaseSelect": "অনুগ্রহ করে একটি কুইজ নির্বাচন করুন",
+    "startGame": "গেম শুরু করুন",
+    "edit": "কুইজ সম্পাদনা করুন"
+  },
+  "result": {
+    "delete": "ফলাফল মুছুন",
+    "deleteConfirm": "\"{{name}}\"-এর ফলাফল মুছবেন? এটি পুনরায় ফিরিয়ে আনা যাবে না।",
+    "deleted": "ফলাফল মুছে ফেলা হয়েছে",
+    "noAnswer": "কোনো উত্তর নেই",
+    "none": "এখনও কোনো ফলাফল নেই, রিপোর্ট দেখতে একটি গেম শেষ করুন",
+    "paginationOf": " এর মধ্যে ",
+    "stats": {
+      "correctAnswers": "সঠিক উত্তর",
+      "playersAnswered": "উত্তর দেওয়া খেলোয়াড়"
+    },
+    "table": {
+      "answered": "উত্তর দেওয়া হয়েছে",
+      "correct": " সঠিক",
+      "correctIncorrect": "সঠিক / ভুল",
+      "incorrect": " ভুল",
+      "player": "খেলোয়াড়",
+      "points": "পয়েন্ট"
+    },
+    "playerCount": "{{count}} জন খেলোয়াড়",
+    "timeLimitSuffix": "সেকেন্ড সময়সীমা",
+    "estimation": {
+      "answered": "উত্তর দেওয়া হয়েছে",
+      "withinMargin": "{{value}} ± {{margin}}",
+      "outsideMargin": "সীমার বাইরে",
+      "average": "গড় উত্তর: {{value}}"
+    }
+  },
+  "tabs": {
+    "play": "খেলুন",
+    "quizz": "কুইজ",
+    "results": "ফলাফল"
+  }
+}

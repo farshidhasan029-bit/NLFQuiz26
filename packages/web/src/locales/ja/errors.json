@@ -24,7 +24,9 @@
     "managerDisconnected": "管理者が切断されました",
     "noPlayersConnected": "接続中のプレイヤーがいません",
     "notFound": "ゲームが見つかりません",
-    "playerAlreadyConnected": "プレイヤーはすでに接続されています"
+    "playerAlreadyConnected": "プレイヤーはすでに接続されています",
+    "expelledForCheating": "You have been expelled from the quiz for splitting your screen or switching windows",
+    "roomFull": "クイズルームの最大参加者数に達しました"
   },
   "invalidRequest": "リクエストが無効です",
   "manager": {

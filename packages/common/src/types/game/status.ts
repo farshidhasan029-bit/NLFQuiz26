@@ -3,6 +3,7 @@ import type {
   QuestionMedia,
   QuestionOptions,
   QuestionType,
+  SanitizedQuestion,
 } from "@razzia/common/types/game"
 
 export const STATUS = {
@@ -17,11 +18,19 @@ export const STATUS = {
   FINISHED: "FINISHED",
   SUMMARY: "SUMMARY",
   WAIT: "WAIT",
+  SELF_PACED_QUIZ: "SELF_PACED_QUIZ",
 } as const
 
 export type Status = (typeof STATUS)[keyof typeof STATUS]
 
 export interface CommonStatusDataMap {
+  SELF_PACED_QUIZ: {
+    subject: string
+    questions: SanitizedQuestion[]
+    totalQuestions: number
+    detectScreenSplit?: boolean
+    hidePlayerResults?: boolean
+  }
   SHOW_START: { time: number; subject: string }
   SHOW_PREPARED: {
     totalAnswers: number
@@ -42,6 +51,7 @@ export interface CommonStatusDataMap {
     questionType: QuestionType
     options?: QuestionOptions
     answersOnly: boolean
+    detectScreenSplit?: boolean
   }
   SHOW_RESULT: {
     correct: boolean

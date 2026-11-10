@@ -10,6 +10,8 @@ import Loader from "@razzia/web/components/Loader"
 import Tooltip from "@razzia/web/components/Tooltip"
 import GameSettingsModal from "@razzia/web/features/game/components/GameSettingsModal"
 import RoomLockButton from "@razzia/web/features/game/components/RoomLockButton"
+import FloatingReactions from "@razzia/web/features/game/components/FloatingReactions"
+import ReactionPicker from "@razzia/web/features/game/components/ReactionPicker"
 import {
   useEvent,
   useSocket,
@@ -21,7 +23,7 @@ import { MANAGER_SKIP_BTN } from "@razzia/web/features/game/utils/constants"
 import type { Status as GameStatus } from "@razzia/web/features/game/utils/createStatus"
 import { useFullscreen } from "@razzia/web/hooks/useFullscreen"
 import clsx from "clsx"
-import { Maximize, Minimize, Users } from "lucide-react"
+import { Hourglass, Maximize, Minimize, Pause, Play, Users } from "lucide-react"
 import { type PropsWithChildren, useState } from "react"
 import toast from "react-hot-toast"
 import { useTranslation } from "react-i18next"
@@ -40,10 +42,17 @@ const GameWrapper = ({
   onBack,
   manager,
 }: Props) => {
-  const { isConnected } = useSocket()
-  const { player, gameMode } = usePlayerStore()
-  const { players, inviteCode, locked, status } = useManagerStore()
-  const { questionStates, setQuestionStates } = useQuestionStore()
+  const { socket, isConnected } = useSocket()
+  const { player, gameMode, hidePlayerResults } = usePlayerStore()
+  const { players, inviteCode, locked, status, gameId } = useManagerStore()
+  const {
+    questionStates,
+    setQuestionStates,
+    isPaused,
+    setPaused,
+    pauseReason,
+    pauseUsername,
+  } = useQuestionStore()
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
   const { t } = useTranslation()
   const [skippedStatus, setSkippedStatus] =
@@ -53,8 +62,20 @@ const GameWrapper = ({
     seconds: number
     total: number
   } | null>(null)
+  const [ultimateTimer, setUltimateTimer] = useState<{
+    remaining: number
+    total: number
+    active: boolean
+    paused: boolean
+  } | null>(null)
   const next = statusName ? MANAGER_SKIP_BTN[statusName] : null
   const isDisabled = skippedStatus !== null && skippedStatus === status
+
+  const formatUltimateTimer = (sec: number) => {
+    const m = Math.floor(sec / 60)
+    const s = sec % 60
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+  }
 
   useEvent(EVENTS.GAME.UPDATE_QUESTION, ({ current, total }) => {
     setQuestionStates({
@@ -68,13 +89,23 @@ const GameWrapper = ({
   })
 
   useEvent(EVENTS.MANAGER.AUTO_ADVANCE, (state) => {
-    setCountdown((current) => {
-      if (state === null) {
-        return null
-      }
+    setCountdown(state)
+  })
 
-      return current ?? state
+  useEvent(EVENTS.GAME.ULTIMATE_TIMER_UPDATE, (state: any) => {
+    setUltimateTimer(state)
+  })
+
+  useEvent(EVENTS.GAME.ULTIMATE_TIMER_EXPIRED, () => {
+    toast(t("game:ultimateTimerExpired"), {
+      icon: "⏰",
+      duration: 6000,
     })
+  })
+
+  useEvent(EVENTS.GAME.PAUSE_UPDATE, (data: any) => {
+    const paused = typeof data === "boolean" ? data : Boolean(data?.paused)
+    setPaused(paused, data?.reason ?? null, data?.username ?? null)
   })
 
   useEvent(EVENTS.GAME.ERROR_MESSAGE, (message) => {
@@ -82,6 +113,16 @@ const GameWrapper = ({
     console.log(t(message))
     setSkippedStatus(null)
   })
+
+  const handleTogglePause = () => {
+    const activeGameId = gameId || usePlayerStore.getState().gameId
+    if (!activeGameId) return
+    if (isPaused) {
+      socket.emit(EVENTS.MANAGER.RESUME_GAME, { gameId: activeGameId })
+    } else {
+      socket.emit(EVENTS.MANAGER.PAUSE_GAME, { gameId: activeGameId })
+    }
+  }
 
   const handleNext = () => {
     setSkippedStatus(status)
@@ -91,6 +132,7 @@ const GameWrapper = ({
   return (
     <section className="relative flex min-h-dvh">
       <GameBackground />
+      <FloatingReactions />
 
       <div className="z-10 flex w-full flex-1 flex-col justify-between">
         {!isConnected && !statusName ? (
@@ -102,12 +144,60 @@ const GameWrapper = ({
           </div>
         ) : (
           <>
-            <div className="flex w-full justify-between p-4">
-              {questionStates && (
-                <div className="flex items-center rounded-md bg-white p-2 px-4 text-lg font-bold text-black">
-                  {`${questionStates.current} / ${questionStates.total}`}
-                </div>
-              )}
+            {!isConnected && (
+              <div className="z-50 flex items-center justify-center gap-2 bg-amber-600 px-4 py-2 text-center text-sm font-bold text-white shadow-md">
+                <span className="inline-block animate-spin">🔄</span>
+                <span>{t("game:connectionDisruptedWithTimer")}</span>
+              </div>
+            )}
+            {isPaused && (
+              <div className="z-50 flex items-center justify-center gap-2 bg-amber-500 px-4 py-2 text-center text-sm font-extrabold text-white shadow-md animate-pulse">
+                <Pause className="size-4 fill-white" />
+                <span>
+                  {pauseReason === "player_offline" && pauseUsername
+                    ? t("game:quizPausedPlayerOffline", {
+                        username: pauseUsername,
+                      })
+                    : t("game:quizPausedHost")}
+                </span>
+              </div>
+            )}
+            <div className="flex w-full items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                {questionStates && (
+                  <div className="flex items-center rounded-md bg-white p-2 px-4 text-lg font-bold text-black shadow-md">
+                    {`${questionStates.current} / ${questionStates.total}`}
+                  </div>
+                )}
+
+                {ultimateTimer?.active && ultimateTimer.remaining > 0 && (
+                  <div
+                    className={clsx(
+                      "flex items-center gap-2 rounded-xl px-3.5 py-1.5 font-mono font-black text-base sm:text-lg shadow-lg border transition-all select-none",
+                      ultimateTimer.remaining <= 30
+                        ? "bg-red-600/95 text-white border-red-400 animate-pulse ring-2 ring-red-400/50"
+                        : ultimateTimer.remaining <= 60
+                          ? "bg-amber-500/95 text-white border-amber-300 ring-2 ring-amber-300/40"
+                          : "bg-black/60 backdrop-blur-md text-amber-300 border-white/20",
+                    )}
+                  >
+                    <Hourglass
+                      className={clsx(
+                        "size-4 shrink-0",
+                        ultimateTimer.paused ? "text-white/60" : "animate-spin text-amber-300",
+                      )}
+                    />
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider text-white/80">
+                        {t("game:ultimateTimerLabel")}:
+                      </span>
+                      <span className="tracking-tight">
+                        {formatUltimateTimer(ultimateTimer.remaining)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {manager && onBack && (
                 <Button
@@ -118,21 +208,43 @@ const GameWrapper = ({
                 </Button>
               )}
 
-              {manager && next && (
-                <div className="ml-auto flex gap-2">
+              {manager && (
+                <div className="ml-auto flex items-center gap-2">
                   {statusName === STATUS.SHOW_ROOM && (
                     <RoomLockButton className="hover:bg-accent rounded-lg bg-white px-3 text-black" />
                   )}
 
-                  <Button
-                    className={clsx(
-                      "hover:bg-accent relative overflow-hidden bg-white px-4 text-black",
-                      { "pointer-events-none": isDisabled },
+                  {statusName !== STATUS.SHOW_ROOM &&
+                    statusName !== STATUS.FINISHED && (
+                      <Button
+                        onClick={handleTogglePause}
+                        className="hover:bg-accent flex items-center gap-1.5 rounded-lg bg-white px-3 text-black font-bold"
+                      >
+                        {isPaused ? (
+                          <>
+                            <Play className="size-4 fill-black text-black" />
+                            <span>Resume</span>
+                          </>
+                        ) : (
+                          <>
+                            <Pause className="size-4 fill-black text-black" />
+                            <span>Pause</span>
+                          </>
+                        )}
+                      </Button>
                     )}
-                    onClick={handleNext}
-                  >
+
+                  {next && (
+                    <Button
+                      className={clsx(
+                        "hover:bg-accent relative overflow-hidden bg-white px-4 text-black",
+                        { "pointer-events-none": isDisabled },
+                      )}
+                      onClick={handleNext}
+                    >
                     {countdown && (
                       <span
+                        key={countdown.total}
                         className="bg-primary/40 absolute inset-y-0 left-0"
                         style={{
                           animation: `progressBar ${countdown.total}s linear forwards`,
@@ -140,8 +252,13 @@ const GameWrapper = ({
                       />
                     )}
 
-                    <span className="relative">{t(next)}</span>
+                    <span className="relative font-bold">
+                      {countdown && countdown.seconds > 0
+                        ? `${t(next)} (${countdown.seconds}s)`
+                        : t(next)}
+                    </span>
                   </Button>
+                  )}
                 </div>
               )}
             </div>
@@ -203,11 +320,14 @@ const GameWrapper = ({
             ) : (
               <div className="z-50 flex items-center justify-between bg-white px-4 py-2 text-lg font-bold text-white">
                 <p className="text-gray-800">{player?.username}</p>
-                {gameMode !== QUIZZ_MODES.SURVEY && (
-                  <div className="rounded-lg bg-gray-800 px-3 py-1 text-lg">
-                    {player?.points}
-                  </div>
-                )}
+                <div className="flex items-center gap-3">
+                  <ReactionPicker />
+                  {gameMode !== QUIZZ_MODES.SURVEY && !hidePlayerResults && (
+                    <div className="rounded-lg bg-gray-800 px-3 py-1 text-lg">
+                      {player?.points}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </>

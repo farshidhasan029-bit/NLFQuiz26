@@ -6,14 +6,15 @@
   "generatedUsernameNotice": "Bạn sẽ được đặt một biệt danh ngẫu nhiên khi tham gia.",
   "hud": {
     "answers": "Câu trả lời",
-    "time": "Thời gian"
+    "time": "Thời gian",
+    "timerStopped": "Đã dừng thời gian"
   },
   "media": {
     "showImage": "Hiện hình ảnh",
     "showVideo": "Hiện video"
   },
   "question": {
-    "show": "Hiện câu hỏi"
+    "show": "Hiển thị câu hỏi"
   },
   "joinInstruction": "Tham gia trò chơi tại",
   "leaderboard": "Bảng xếp hạng",
@@ -47,7 +48,32 @@
       "label": "Chỉ hiện đáp án",
       "hint": "Người chơi chỉ thấy các nút đáp án, kèm một nút để đọc lại câu hỏi."
     },
-    "title": "Cài đặt trò chơi"
+    "title": "Cài đặt trò chơi",
+    "antiCheat": {
+      "label": "Anti-Cheat Protection",
+      "hint": "Automatically expels participants who split their screen or switch windows during the quiz."
+    },
+    "hidePlayerResults": {
+      "label": "Kết quả và thứ hạng chỉ dành cho người tổ chức",
+      "hint": "Chỉ người tổ chức mới thấy câu trả lời đúng và xếp hạng. Người tham gia thấy màn hình chờ."
+    },
+    "pauseOnDisconnect": {
+      "label": "Tạm dừng thời gian khi mất kết nối",
+      "hint": "Tự động dừng đếm ngược khi có người tham gia ngoại tuyến để không bị mất thời gian."
+    },
+    "ultimateTimer": {
+      "label": "Hẹn giờ tối thượng của bài thi",
+      "hint": "Đặt giới hạn thời gian đếm ngược tổng thể để kết thúc bài thi. Người tham gia phải trả lời tất cả các câu hỏi trước khi hết giờ.",
+      "duration": "Tổng thời lượng (giây)"
+    },
+    "selfPaced": {
+      "label": "Chế độ thi tự định độ",
+      "hint": "Người tham gia trả lời theo tốc độ riêng, bỏ qua câu hỏi và xem lại bất cứ lúc nào"
+    },
+    "maxParticipants": {
+      "label": "Giới hạn người tham gia",
+      "hint": "Giới hạn số lượng người tham gia bài thi này (0 là không giới hạn)"
+    }
   },
   "startGame": "Bắt đầu trò chơi",
   "summary": {
@@ -65,5 +91,54 @@
   },
   "showQrCode": "Hiện mã QR",
   "streak": "Chuỗi trả lời đúng",
-  "pinDigit": "Chữ số {{position}} của mã PIN"
+  "pinDigit": "Chữ số {{position}} của mã PIN",
+  "rank_ordinal_two": "{{count}}nd place",
+  "rank_ordinal_few": "{{count}}rd place",
+  "antiCheat": {
+    "banner": "Anti-cheat active: Screen splitting or window switching will result in expulsion.",
+    "managerAlert": "{{username}} was expelled for screen-splitting / cheating."
+  },
+  "connectionDisrupted": "Network connection disrupted. Reconnecting... (Your progress is saved)",
+  "reconnecting": "Reconnecting to quiz... Your progress is saved",
+  "answerRecordedTitle": "Đã ghi nhận câu trả lời!",
+  "answerRecordedWaitHost": "Vui lòng xem màn hình của người tổ chức để biết câu trả lời và bảng xếp hạng.",
+  "hostRevealInProgress": "Người tổ chức đang công bố kết quả",
+  "quizFinishedTitle": "Đã hoàn thành câu đố!",
+  "quizFinishedWaitHost": "Cảm ơn bạn đã tham gia! Bảng xếp hạng cuối cùng và người chiến thắng được hiển thị trên màn hình máy chủ.",
+  "watchHostScreenPodium": "Người chiến thắng trên màn hình chính",
+  "timerStoppedOffline": "Thiết bị ngoại tuyến — Đã dừng thời gian. Đang kết nối lại...",
+  "timerStoppedGamePaused": "Đã tạm dừng bài kiểm tra — Đã dừng thời gian",
+  "connectionDisruptedWithTimer": "Mất kết nối mạng — Đã dừng thời gian trên thiết bị của bạn. Đang kết nối lại...",
+  "quizPausedPlayerOffline": "TẠM DỪNG BÀI KIỂM TRA: {{username}} đã ngoại tuyến — Đã dừng thời gian",
+  "quizPausedHost": "NGƯỜI TỔ CHỨC ĐÃ TẠM DỪNG BÀI KIỂM TRA",
+  "ultimateTimerLabel": "Giới hạn bài thi",
+  "ultimateTimerExpired": "Hết giờ! Giới hạn thời gian tổng thể của bài thi đã hết.",
+  "deviceJoinCount": "Đã tham gia {{count}} lần từ thiết bị này",
+  "skipQuestion": "Bỏ qua câu hỏi",
+  "previousQuestion": "Trước",
+  "nextQuestion": "Tiếp",
+  "submitQuiz": "Nộp bài thi",
+  "submitQuizConfirmTitle": "Nộp bài thi?",
+  "submitQuizNow": "Nộp câu trả lời",
+  "submitQuizReady": "Bạn đã trả lời tất cả các câu hỏi. Sẵn sàng nộp bài?",
+  "submitQuizWarningUnanswered": "Bạn vẫn còn câu hỏi chưa trả lời. Bạn có chắc muốn nộp ngay bây giờ không?",
+  "quizSubmittedWait": "Đã nộp bài! Vui lòng đợi người tổ chức công bố kết quả cuối cùng.",
+  "finishQuiz": "Kết thúc bài thi",
+  "finishAndReveal": "Kết thúc & xem kết quả",
+  "finishQuizConfirmTitle": "Kết thúc bài thi sớm?",
+  "finishQuizConfirmDesc": "{{submitted}} trong tổng số {{total}} người tham gia đã nộp. Kết thúc bây giờ sẽ chấm điểm các câu trả lời hiện tại.",
+  "finishQuizNow": "Kết thúc ngay",
+  "selfPacedExamTitle": "Chế độ thi tự định độ",
+  "examInProgress": "Bài thi đang diễn ra",
+  "questionsTotal": "Câu hỏi",
+  "answered": "Đã trả lời",
+  "answeredBadge": "Đã trả lời",
+  "skippedBadge": "Đã bỏ qua",
+  "unanswered": "Chưa trả lời",
+  "inProgressBadge": "Đang làm",
+  "submittedBadge": "Đã nộp",
+  "unlimited": "Không giới hạn",
+  "capacityReached": "Đầy chỗ",
+  "submitted": "Đã nộp",
+  "questionLabel": "Câu hỏi"
 }

@@ -4,3 +4,8 @@
 .secrets
 release.json
 /coverage
+.tools
+.vitest
+tunnel-url.txt
+tunnel.log
+deploy-*.sh

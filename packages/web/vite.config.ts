@@ -87,6 +87,7 @@ const socketUrl = `http://localhost:${Number(process.env.SOCKET_PORT) || 3001}`
 const serverOptions = {
   port: webPort,
   host: "0.0.0.0",
+  allowedHosts: true,
   proxy: {
     "/ws": {
       target: socketUrl,

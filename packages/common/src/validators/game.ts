@@ -16,6 +16,8 @@ export const checkGameValidator = z.object({
 export const joinGameValidator = z.object({
   inviteCode: inviteCodeValidator,
   username: usernameValidator.optional(),
+  deviceId: z.string().optional(),
+  deviceJoinCount: z.number().int().optional(),
 })
 
 const delayValidator = z
@@ -27,11 +29,20 @@ const delayValidator = z
 export const gameSettingsSchema = z.object({
   generatedUsernames: z.boolean(),
   answersOnly: z.boolean(),
+  detectScreenSplit: z.boolean(),
+  pauseOnDisconnect: z.boolean().default(true),
+  hidePlayerResults: z.boolean().default(true),
   autoAdvance: z.object({
     enable: z.boolean(),
     responsesDelay: delayValidator,
     leaderboardDelay: delayValidator,
   }),
+  ultimateTimer: z.object({
+    enable: z.boolean(),
+    duration: z.number().int().min(10).max(7200),
+  }).default({ enable: false, duration: 600 }),
+  selfPaced: z.boolean().default(true),
+  maxParticipants: z.number().int().min(0).max(1000).default(0),
 })
 
 export const gameSettingsValidator = gameSettingsSchema.partial()

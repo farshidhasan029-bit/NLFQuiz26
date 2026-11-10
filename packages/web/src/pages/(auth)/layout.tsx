@@ -9,7 +9,7 @@ const searchSchema = z.object({
 
 const AuthLayout = () => (
   <Background>
-    <div className="absolute top-4 right-4">
+    <div className="absolute top-4 right-4 z-20">
       <LanguageSwitcher />
     </div>
     <Outlet />

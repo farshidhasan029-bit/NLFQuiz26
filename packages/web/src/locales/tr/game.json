@@ -6,7 +6,8 @@
   "generatedUsernameNotice": "Katıldığınızda size rastgele bir takma ad atanacaktır.",
   "hud": {
     "answers": "Cevaplar",
-    "time": "Süre"
+    "time": "Süre",
+    "timerStopped": "Zamanlayıcı Durduruldu"
   },
   "media": {
     "showImage": "Görseli göster",
@@ -46,7 +47,32 @@
       "label": "Yalnızca cevaplar",
       "hint": "Oyuncular yalnızca cevap butonlarını görür; soruyu tekrar okumak için bir buton bulunur."
     },
-    "title": "Oyun ayarları"
+    "title": "Oyun ayarları",
+    "antiCheat": {
+      "label": "Anti-Cheat Protection",
+      "hint": "Automatically expels participants who split their screen or switch windows during the quiz."
+    },
+    "hidePlayerResults": {
+      "label": "Yalnızca sunucu için sonuçlar ve sıralama",
+      "hint": "Doğru yanıtları ve sıralamayı yalnızca sunucu görür. Katılımcılar bekleme ekranı görür."
+    },
+    "pauseOnDisconnect": {
+      "label": "Bağlantı koptuğunda zamanlayıcıyı duraklat",
+      "hint": "Bir katılımcı çevrimdışı olduğunda zaman kaybını önlemek için geri sayımı duraklatır."
+    },
+    "ultimateTimer": {
+      "label": "Nihai Sınav Zamanlayıcısı",
+      "hint": "Sınavın sona ermesi için genel bir geri sayım süresi belirler. Katılımcıların süre dolmadan önce tüm soruları yanıtlaması gerekir.",
+      "duration": "Toplam Süre (saniye)"
+    },
+    "selfPaced": {
+      "label": "Kendi Hızında Sınav Modu",
+      "hint": "Katılımcılar kendi hızlarında yanıtlar, soruları atlar ve istedikleri zaman geri dönebilir"
+    },
+    "maxParticipants": {
+      "label": "Katılımcı Limiti",
+      "hint": "Bu yarışmaya kaç katılımcının katılabileceğini sınırlayın (sınırsız için 0)"
+    }
   },
   "startGame": "Başlat",
   "summary": {
@@ -64,5 +90,55 @@
   },
   "showQrCode": "QR kodunu göster",
   "streak": "Doğru cevap serisi",
-  "pinDigit": "PIN'in {{position}}. rakamı"
+  "pinDigit": "PIN'in {{position}}. rakamı",
+  "rank_ordinal_one": "{{count}}st place",
+  "rank_ordinal_two": "{{count}}nd place",
+  "rank_ordinal_few": "{{count}}rd place",
+  "antiCheat": {
+    "banner": "Anti-cheat active: Screen splitting or window switching will result in expulsion.",
+    "managerAlert": "{{username}} was expelled for screen-splitting / cheating."
+  },
+  "connectionDisrupted": "Network connection disrupted. Reconnecting... (Your progress is saved)",
+  "reconnecting": "Reconnecting to quiz... Your progress is saved",
+  "answerRecordedTitle": "Yanıt Kaydedildi!",
+  "answerRecordedWaitHost": "Yanıtlar ve lider tablosu için lütfen sunucu ekranını izleyin.",
+  "hostRevealInProgress": "Sunucu sonuçları gösteriyor",
+  "quizFinishedTitle": "Test Tamamlandı!",
+  "quizFinishedWaitHost": "Katıldığınız için teşekkürler! Nihai sıralama ve kazananlar sunucu ekranında gösterilmektedir.",
+  "watchHostScreenPodium": "Kazananlar sunucu ekranında",
+  "timerStoppedOffline": "Cihaz çevrimdışı — Zamanlayıcı durduruldu. Yeniden bağlanıyor...",
+  "timerStoppedGamePaused": "Test Duraklatıldı — Zamanlayıcı durduruldu",
+  "connectionDisruptedWithTimer": "Ağ bağlantısı koptu — Cihazınızdaki zamanlayıcı durduruldu. Yeniden bağlanıyor...",
+  "quizPausedPlayerOffline": "TEST DURAKLATILDI: {{username}} çevrimdışı oldu — Zamanlayıcı durduruldu",
+  "quizPausedHost": "TEST SUNUCU TARAFINDAN DURAKLATILDI",
+  "ultimateTimerLabel": "Sınav Süresi",
+  "ultimateTimerExpired": "Süre doldu! Genel sınav süresi sona erdi.",
+  "deviceJoinCount": "Bu cihazdan {{count}} kez katıldı",
+  "skipQuestion": "Soruyu Atla",
+  "previousQuestion": "Önceki",
+  "nextQuestion": "Sonraki",
+  "submitQuiz": "Yarışmayı Gönder",
+  "submitQuizConfirmTitle": "Yarışma Gönderilsin mi?",
+  "submitQuizNow": "Cevapları Gönder",
+  "submitQuizReady": "Tüm soruları yanıtladınız. Göndermeye hazır mısınız?",
+  "submitQuizWarningUnanswered": "Hala cevaplanmamış sorularınız var. Şimdi göndermek istediğinizden emin misiniz?",
+  "quizSubmittedWait": "Yarışma gönderildi! Lütfen sunucunun nihai sonuçları açıklamasını bekleyin.",
+  "finishQuiz": "Yarışmayı Bitir",
+  "finishAndReveal": "Bitir ve Sonuçları Göster",
+  "finishQuizConfirmTitle": "Yarışma Erken Bitirilsin mi?",
+  "finishQuizConfirmDesc": "{{total}} katılımcıdan {{submitted}} kişi gönderdi. Şimdi bitirmek mevcut cevapları puanlayacaktır.",
+  "finishQuizNow": "Yarışmayı Şimdi Bitir",
+  "selfPacedExamTitle": "Kendi Hızında Sınav Modu",
+  "examInProgress": "Yarışma Devam Ediyor",
+  "questionsTotal": "Sorular",
+  "answered": "Yanıtlandı",
+  "answeredBadge": "Yanıtlandı",
+  "skippedBadge": "Atlandı",
+  "unanswered": "Cevaplanmamış",
+  "inProgressBadge": "Devam Ediyor",
+  "submittedBadge": "Gönderildi",
+  "unlimited": "Sınırsız",
+  "capacityReached": "Tam Kapasite",
+  "submitted": "Gönderildi",
+  "questionLabel": "Soru"
 }
