@@ -15,7 +15,7 @@ import { v7 as uuid } from "uuid"
 
 const ALGORITHM = "HS256"
 const PLAYER_TTL = 60 * 60 * 24 * 30
-const MANAGER_TTL = 60 * 60 * 12
+const MANAGER_TTL = 60 * 60 * 24 * 30
 
 export const newClientId = (): string => uuid()
 

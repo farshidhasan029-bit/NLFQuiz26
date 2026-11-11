@@ -17,6 +17,11 @@ const ManagerAuthPage = () => {
     onSuccess: (session) => {
       setToken(session.token)
       navigate({ to: "/manager/config" })
+      setTimeout(() => {
+        if (!window.location.pathname.startsWith("/manager/config")) {
+          window.location.href = "/manager/config"
+        }
+      }, 50)
     },
     onError: (error) => {
       toast.error(

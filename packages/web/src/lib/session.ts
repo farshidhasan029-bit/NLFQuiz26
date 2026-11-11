@@ -29,6 +29,7 @@ const removeStorage = (key: string) =>
 removeStorage("client_id")
 
 let memoryToken: string | null = null
+let serverClockOffset = 0
 
 const decodeClaims = (token: string): SessionClaims | null => {
   try {
@@ -43,6 +44,10 @@ const decodeClaims = (token: string): SessionClaims | null => {
 
     if (typeof claims.sub !== "string" || typeof claims.exp !== "number") {
       return null
+    }
+
+    if (typeof claims.iat === "number") {
+      serverClockOffset = Math.floor(Date.now() / 1000) - claims.iat
     }
 
     return claims
@@ -79,7 +84,10 @@ export const isExpired = (skew = EXPIRY_SKEW_SECONDS): boolean => {
     return true
   }
 
-  return claims.exp - skew <= Math.floor(Date.now() / 1000)
+  const currentEstimatedServerTime =
+    Math.floor(Date.now() / 1000) - serverClockOffset
+
+  return claims.exp - skew <= currentEstimatedServerTime
 }
 
 export const getRole = (): SessionRole => {
