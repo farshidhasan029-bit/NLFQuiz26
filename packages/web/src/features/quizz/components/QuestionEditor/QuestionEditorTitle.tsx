@@ -25,7 +25,7 @@ const QuestionEditorTitle = () => {
               fieldState.invalid ? `${field.name}-error` : undefined
             }
             className={clsx(
-              "bg-background placeholder:text-muted-foreground text-foreground w-full rounded-xl p-4 text-center text-xl font-semibold shadow-sm outline-none",
+              "bg-background placeholder:text-muted-foreground text-foreground w-full rounded-xl p-3 sm:p-4 text-center text-base sm:text-xl font-semibold shadow-sm outline-none",
               fieldState.invalid && "ring-2 ring-red-500",
             )}
             placeholder={t("quizz:question.placeholder")}

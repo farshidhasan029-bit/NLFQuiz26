@@ -14,10 +14,15 @@ import {
 import CategoryField from "@razzia/web/features/quizz/components/QuestionEditor/QuestionEditorConfig/CategoryField"
 import ConfigField from "@razzia/web/features/quizz/components/QuestionEditor/QuestionEditorConfig/ConfigField"
 import { useQuizzEditor } from "@razzia/web/features/quizz/contexts/quizz-editor-context"
+import clsx from "clsx"
 import { LayoutList } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-const QuestionEditorConfig = () => {
+interface Props {
+  inline?: boolean
+}
+
+const QuestionEditorConfig = ({ inline = false }: Props) => {
   const {
     currentQuestion,
     currentQuestionId,
@@ -46,7 +51,14 @@ const QuestionEditorConfig = () => {
   }))
 
   return (
-    <aside className="bg-background z-10 m-3 flex max-h-[calc(100%-1.5rem)] w-68 shrink-0 flex-col gap-3 self-start overflow-y-auto rounded-xl p-4 shadow-sm">
+    <aside
+      className={clsx(
+        "bg-background z-10 flex flex-col gap-3 rounded-xl p-4 shadow-sm",
+        inline
+          ? "w-full border border-border/60"
+          : "m-3 max-h-[calc(100%-1.5rem)] w-68 shrink-0 self-start overflow-y-auto",
+      )}
+    >
       <ConfigField>
         <ConfigField.Label
           icon={<LayoutList className="size-4" />}

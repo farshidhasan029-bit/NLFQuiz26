@@ -104,12 +104,12 @@ const QuestionEditorMedia = () => {
           <div className="flex flex-wrap justify-center gap-2">
             <label
               aria-disabled={isUploading}
-              className="bg-primary flex cursor-pointer items-center gap-1.5 rounded-lg p-2 text-lg font-semibold text-white hover:brightness-[1.05] active:brightness-[0.95] aria-disabled:cursor-wait aria-disabled:opacity-50"
+              className="bg-primary flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-2 text-sm sm:text-base font-semibold text-white hover:brightness-[1.05] active:brightness-[0.95] aria-disabled:cursor-wait aria-disabled:opacity-50"
             >
               {isUploading ? (
-                <Loader className="size-6 text-white" />
+                <Loader className="size-5 text-white" />
               ) : (
-                <Upload className="size-6" />
+                <Upload className="size-5" />
               )}
               <p>{t("quizz:media.upload")}</p>
               <input
@@ -122,10 +122,11 @@ const QuestionEditorMedia = () => {
             </label>
             <Button
               onClick={handleOpenLibrary}
-              className="bg-accent text-accent-foreground"
+              size="sm"
+              className="bg-accent text-accent-foreground text-sm sm:text-base"
             >
               <div className="flex items-center gap-1.5">
-                <Library className="size-6" />
+                <Library className="size-5" />
                 <p>{t("quizz:media.library")}</p>
               </div>
             </Button>

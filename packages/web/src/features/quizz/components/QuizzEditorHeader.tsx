@@ -86,13 +86,13 @@ const QuizzEditorHeader = () => {
   )
 
   return (
-    <header className="bg-background z-20 flex h-14 items-center justify-between gap-4 px-4 shadow-sm">
-      <div className="flex items-center gap-4">
+    <header className="bg-background z-20 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-2.5 md:gap-4 p-2.5 md:px-4 md:h-14 shadow-sm shrink-0">
+      <div className="flex items-center justify-between gap-2 md:gap-4 flex-1 min-w-0">
         <Controller
           control={control}
           name="subject"
           render={({ field, fieldState }) => (
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2 flex-1 md:max-w-xs min-w-0">
               <Input
                 {...field}
                 variant="sm"
@@ -101,7 +101,7 @@ const QuizzEditorHeader = () => {
                   fieldState.invalid ? `${field.name}-error` : undefined
                 }
                 className={clsx(
-                  "w-64",
+                  "w-full",
                   fieldState.invalid && "ring-2 ring-red-500",
                 )}
                 placeholder={t("quizz:titleQuizzPlaceholder")}
@@ -114,11 +114,48 @@ const QuizzEditorHeader = () => {
           )}
         />
 
+        <div className="hidden md:block">
+          <Controller
+            control={control}
+            name="gameMode"
+            render={({ field }) => (
+              <ToggleGroup
+                value={field.value}
+                onChange={field.onChange}
+                items={QUIZZ_MODE_LIST.map((gameMode) => ({
+                  value: gameMode,
+                  label: t(`quizz:gameMode.${gameMode}`),
+                }))}
+              />
+            )}
+          />
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <Button
+            size="sm"
+            className="bg-accent text-accent-foreground font-semibold px-3 py-1.5"
+            onClick={handleExit}
+          >
+            {t("common:exit")}
+          </Button>
+          <Button
+            size="sm"
+            className="bg-primary px-3 py-1.5"
+            onClick={handleSave}
+          >
+            {t("common:save")}
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex md:hidden items-center justify-center pt-1 border-t border-border/40">
         <Controller
           control={control}
           name="gameMode"
           render={({ field }) => (
             <ToggleGroup
+              className="w-full justify-center"
               value={field.value}
               onChange={field.onChange}
               items={QUIZZ_MODE_LIST.map((gameMode) => ({
@@ -128,18 +165,6 @@ const QuizzEditorHeader = () => {
             />
           )}
         />
-      </div>
-
-      <div className="flex gap-2">
-        <Button
-          className="text-md bg-accent text-accent-foreground px-4 py-2 font-semibold"
-          onClick={handleExit}
-        >
-          {t("common:exit")}
-        </Button>
-        <Button className="bg-primary text-md px-4 py-2" onClick={handleSave}>
-          {t("common:save")}
-        </Button>
       </div>
     </header>
   )

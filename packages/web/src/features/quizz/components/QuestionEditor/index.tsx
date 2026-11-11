@@ -18,16 +18,22 @@ const QuestionEditor = () => {
   }
 
   return (
-    <div className="flex flex-1 overflow-hidden">
-      <main className="mx-auto flex max-w-7xl flex-1 flex-col gap-4 overflow-y-auto p-6">
+    <div className="flex flex-1 flex-col lg:flex-row overflow-hidden min-w-0">
+      <main className="mx-auto flex max-w-7xl w-full flex-1 flex-col gap-4 overflow-y-auto p-3 sm:p-6 min-w-0">
         <QuestionEditorTitle />
         <QuestionEditorMedia />
         <QuestionEditorNote />
         <AnswersEditor key={currentQuestionId} />
 
+        <div className="block lg:hidden mt-2">
+          <QuestionEditorConfig inline />
+        </div>
+
         <GameBackground />
       </main>
-      <QuestionEditorConfig />
+      <div className="hidden lg:flex shrink-0">
+        <QuestionEditorConfig />
+      </div>
     </div>
   )
 }

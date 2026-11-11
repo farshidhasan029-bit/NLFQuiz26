@@ -80,7 +80,7 @@ const QuestionEditorAnswers = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {currentQuestion.answers.map((_, i) => {
           const isSelected = currentQuestion.solutions?.includes(i) ?? false
 
@@ -90,10 +90,10 @@ const QuestionEditorAnswers = () => {
               control={control}
               name={questionPath(`answers.${i}`)}
               render={({ field, fieldState }) => (
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1 min-w-0">
                   <div
                     className={clsx(
-                      "flex items-center gap-3 rounded-2xl px-4 py-6",
+                      "flex items-center gap-3 rounded-2xl px-4 py-4 sm:py-6",
                       ANSWERS_COLORS[i],
                       fieldState.invalid && "ring-2 ring-red-500",
                     )}
@@ -101,14 +101,14 @@ const QuestionEditorAnswers = () => {
                     <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-black/20 text-sm font-bold text-white md:size-8 md:text-base">
                       {ANSWERS_LABELS[i]}
                     </span>
-                    <div className="flex flex-1 items-center justify-between gap-1.5 drop-shadow-md">
+                    <div className="flex flex-1 items-center justify-between gap-1.5 drop-shadow-md min-w-0">
                       <input
                         {...field}
                         aria-invalid={fieldState.invalid}
                         aria-describedby={
                           fieldState.invalid ? `${field.name}-error` : undefined
                         }
-                        className="w-full bg-transparent font-semibold text-white placeholder-white/70 outline-none"
+                        className="w-full bg-transparent font-semibold text-white placeholder-white/70 outline-none text-sm sm:text-base min-w-0"
                         placeholder={t("quizz:addAnswerPlaceholder")}
                       />
                       {gameMode !== QUIZZ_MODES.SURVEY && SolutionPicker && (

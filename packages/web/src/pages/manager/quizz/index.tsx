@@ -8,7 +8,7 @@ const QuizzEditorPage = () => (
   <QuizzEditorProvider>
     <div className="bg-muted relative flex h-svh flex-col">
       <QuizzEditorHeader />
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 flex-col lg:flex-row overflow-hidden">
         <QuizzEditorSidebar />
         <QuestionEditor />
       </div>

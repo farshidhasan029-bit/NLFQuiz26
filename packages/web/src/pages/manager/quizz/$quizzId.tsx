@@ -41,13 +41,13 @@ const QuizzEditPage = () => {
             <Skeleton className="h-10 w-20" />
           </div>
         </header>
-        <div className="flex flex-1 overflow-hidden">
-          <aside className="bg-background z-10 m-3 flex w-72 shrink-0 flex-col gap-2 rounded-xl p-3 shadow-sm">
+        <div className="flex flex-1 flex-col lg:flex-row overflow-hidden">
+          <aside className="bg-background z-10 m-3 hidden lg:flex w-72 shrink-0 flex-col gap-2 rounded-xl p-3 shadow-sm">
             <Skeleton className="h-20" />
             <Skeleton className="h-20" />
             <Skeleton className="h-20" />
           </aside>
-          <main className="mx-auto flex max-w-7xl flex-1 flex-col gap-4 p-6">
+          <main className="mx-auto flex max-w-7xl flex-1 flex-col gap-4 p-4 sm:p-6">
             <Skeleton className="h-14" />
             <Skeleton className="h-64" />
             <Skeleton className="flex-1" />
@@ -65,7 +65,7 @@ const QuizzEditPage = () => {
     <QuizzEditorProvider initialData={quizz}>
       <div className="bg-muted relative flex h-svh flex-col">
         <QuizzEditorHeader />
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 flex-col lg:flex-row overflow-hidden">
           <QuizzEditorSidebar />
           <QuestionEditor />
         </div>
