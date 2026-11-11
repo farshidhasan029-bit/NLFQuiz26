@@ -23,6 +23,9 @@ FROM alpine:3.24.3@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c
 
 RUN apk upgrade --no-cache && apk add --no-cache nginx nodejs s6
 
+ENV MANAGER_PASSWORD=manager123
+ENV NODE_ENV=production
+
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 COPY --chmod=755 docker/s6 /etc/s6
 
