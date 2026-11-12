@@ -63,9 +63,9 @@ const QuizzEditPage = () => {
 
   return (
     <QuizzEditorProvider initialData={quizz}>
-      <div className="bg-muted relative flex h-svh flex-col">
+      <div className="bg-muted relative flex h-svh flex-col min-h-0">
         <QuizzEditorHeader />
-        <div className="flex flex-1 flex-col lg:flex-row overflow-hidden">
+        <div className="flex flex-1 flex-col lg:flex-row overflow-hidden min-h-0">
           <QuizzEditorSidebar />
           <QuestionEditor />
         </div>

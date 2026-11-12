@@ -267,7 +267,7 @@ const Room = ({ data: { text, inviteCode } }: Props) => {
         />
 
         {settings.autoAdvance.enable && (
-          <div className="flex items-center gap-2 border-l border-white/30 pl-3">
+          <div className="flex flex-wrap items-center justify-center gap-2 border-t md:border-t-0 md:border-l border-white/30 pt-2 md:pt-0 md:pl-3">
             <span className="text-sm font-medium text-white/80">Question Delay:</span>
             {[3, 5, 10, 15].map((sec) => (
               <button

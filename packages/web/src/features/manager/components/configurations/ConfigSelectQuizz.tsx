@@ -16,6 +16,8 @@ import { useState } from "react"
 import toast from "react-hot-toast"
 import { useTranslation } from "react-i18next"
 
+import { requestFullscreen } from "@razzia/web/hooks/useFullscreen"
+
 const ConfigSelectQuizz = () => {
   const { data, isPending } = useQuery(quizzListQuery())
   const { updateManager } = useManagerStore()
@@ -58,6 +60,7 @@ const ConfigSelectQuizz = () => {
       return
     }
 
+    requestFullscreen()
     start(selected)
   }
 

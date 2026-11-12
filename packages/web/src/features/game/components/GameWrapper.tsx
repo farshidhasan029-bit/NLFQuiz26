@@ -53,7 +53,7 @@ const GameWrapper = ({
     pauseReason,
     pauseUsername,
   } = useQuestionStore()
-  const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
+  const { isFullscreen, toggle: toggleFullscreen, enterFullscreen } = useFullscreen()
   const { t } = useTranslation()
   const [skippedStatus, setSkippedStatus] =
     useState<GameStatus<StatusDataMap> | null>(null)
@@ -125,16 +125,19 @@ const GameWrapper = ({
   }
 
   const handleNext = () => {
+    if (statusName === STATUS.SHOW_ROOM) {
+      enterFullscreen()
+    }
     setSkippedStatus(status)
     onNext?.()
   }
 
   return (
-    <section className="relative flex min-h-dvh">
+    <section className="relative flex h-dvh min-h-dvh max-h-dvh w-full overflow-hidden select-none">
       <GameBackground />
       <FloatingReactions />
 
-      <div className="z-10 flex w-full flex-1 flex-col justify-between">
+      <div className="z-10 flex w-full h-full flex-1 flex-col justify-between min-h-0 overflow-hidden">
         {!isConnected && !statusName ? (
           <div className="flex h-full w-full flex-1 flex-col items-center justify-center">
             <Loader className="h-30" />
@@ -208,62 +211,83 @@ const GameWrapper = ({
                 </Button>
               )}
 
-              {manager && (
-                <div className="ml-auto flex items-center gap-2">
-                  {statusName === STATUS.SHOW_ROOM && (
-                    <RoomLockButton className="hover:bg-accent rounded-lg bg-white px-3 text-black" />
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={toggleFullscreen}
+                  aria-label={t(
+                    isFullscreen
+                      ? "common:exitFullscreen"
+                      : "common:fullscreen",
                   )}
+                  className="flex items-center justify-center rounded-xl bg-black/40 p-2 text-white drop-shadow-md hover:bg-black/60 transition-all border border-white/10"
+                >
+                  {isFullscreen ? (
+                    <Minimize className="size-4 sm:size-5" />
+                  ) : (
+                    <Maximize className="size-4 sm:size-5" />
+                  )}
+                </button>
 
-                  {statusName !== STATUS.SHOW_ROOM &&
-                    statusName !== STATUS.FINISHED && (
+                {manager && (
+                  <>
+                    {statusName === STATUS.SHOW_ROOM && (
+                      <RoomLockButton className="hover:bg-accent rounded-lg bg-white px-3 text-black" />
+                    )}
+
+                    {statusName !== STATUS.SHOW_ROOM &&
+                      statusName !== STATUS.FINISHED && (
+                        <Button
+                          onClick={handleTogglePause}
+                          className="hover:bg-accent flex items-center gap-1.5 rounded-lg bg-white px-3 text-black font-bold"
+                        >
+                          {isPaused ? (
+                            <>
+                              <Play className="size-4 fill-black text-black" />
+                              <span>Resume</span>
+                            </>
+                          ) : (
+                            <>
+                              <Pause className="size-4 fill-black text-black" />
+                              <span>Pause</span>
+                            </>
+                          )}
+                        </Button>
+                      )}
+
+                    {next && (
                       <Button
-                        onClick={handleTogglePause}
-                        className="hover:bg-accent flex items-center gap-1.5 rounded-lg bg-white px-3 text-black font-bold"
-                      >
-                        {isPaused ? (
-                          <>
-                            <Play className="size-4 fill-black text-black" />
-                            <span>Resume</span>
-                          </>
-                        ) : (
-                          <>
-                            <Pause className="size-4 fill-black text-black" />
-                            <span>Pause</span>
-                          </>
+                        className={clsx(
+                          "hover:bg-accent relative overflow-hidden bg-white px-4 text-black",
+                          { "pointer-events-none": isDisabled },
                         )}
+                        onClick={handleNext}
+                      >
+                        {countdown && (
+                          <span
+                            key={countdown.total}
+                            className="bg-primary/40 absolute inset-y-0 left-0"
+                            style={{
+                              animation: `progressBar ${countdown.total}s linear forwards`,
+                            }}
+                          />
+                        )}
+
+                        <span className="relative font-bold">
+                          {countdown && countdown.seconds > 0
+                            ? `${t(next)} (${countdown.seconds}s)`
+                            : t(next)}
+                        </span>
                       </Button>
                     )}
-
-                  {next && (
-                    <Button
-                      className={clsx(
-                        "hover:bg-accent relative overflow-hidden bg-white px-4 text-black",
-                        { "pointer-events-none": isDisabled },
-                      )}
-                      onClick={handleNext}
-                    >
-                    {countdown && (
-                      <span
-                        key={countdown.total}
-                        className="bg-primary/40 absolute inset-y-0 left-0"
-                        style={{
-                          animation: `progressBar ${countdown.total}s linear forwards`,
-                        }}
-                      />
-                    )}
-
-                    <span className="relative font-bold">
-                      {countdown && countdown.seconds > 0
-                        ? `${t(next)} (${countdown.seconds}s)`
-                        : t(next)}
-                    </span>
-                  </Button>
-                  )}
-                </div>
-              )}
+                  </>
+                )}
+              </div>
             </div>
 
-            {children}
+            <div className="flex-1 w-full min-h-0 overflow-y-auto flex flex-col">
+              {children}
+            </div>
 
             {manager ? (
               <div
