@@ -54,7 +54,7 @@ const HostResultQueries = () => {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-full max-w-sm px-2 sm:px-0">
+    <div className="fixed bottom-20 sm:bottom-22 right-4 z-50 w-[calc(100%-2rem)] max-w-sm sm:w-full">
       <div className="overflow-hidden rounded-2xl border-2 border-amber-400/40 bg-slate-900/95 shadow-2xl backdrop-blur-xl text-white">
         {/* Header bar */}
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 bg-gradient-to-r from-amber-500/20 to-transparent">

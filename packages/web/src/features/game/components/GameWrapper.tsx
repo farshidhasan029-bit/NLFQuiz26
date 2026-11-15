@@ -292,11 +292,12 @@ const GameWrapper = ({
             {manager ? (
               <div
                 className={clsx("z-50 flex items-stretch gap-3 p-4", {
-                  "absolute inset-x-0 bottom-0": statusName === STATUS.FINISHED,
+                  "absolute inset-x-0 bottom-0 pointer-events-none":
+                    statusName === STATUS.FINISHED,
                 })}
               >
                 {inviteCode && statusName !== STATUS.SHOW_ROOM && (
-                  <div className="flex items-center gap-3 rounded-lg bg-black/40 px-3 py-1.5 text-xl font-bold text-white drop-shadow-md">
+                  <div className="pointer-events-auto flex items-center gap-3 rounded-lg bg-black/40 px-3 py-1.5 text-xl font-bold text-white drop-shadow-md">
                     {!locked && (
                       <>
                         <span>{window.location.host}</span>
@@ -309,7 +310,7 @@ const GameWrapper = ({
                 )}
 
                 <Tooltip content={t("game:playersJoined")}>
-                  <div className="ml-auto flex items-center gap-2 rounded-lg bg-black/40 px-3 py-1.5 text-xl font-bold text-white drop-shadow-md">
+                  <div className="pointer-events-auto ml-auto flex items-center gap-2 rounded-lg bg-black/40 px-3 py-1.5 text-xl font-bold text-white drop-shadow-md">
                     <Users className="size-5" />
                     {totalPlayers ?? players.length}
                   </div>
@@ -331,7 +332,7 @@ const GameWrapper = ({
                         ? "common:exitFullscreen"
                         : "common:fullscreen",
                     )}
-                    className="flex items-center justify-center rounded-lg bg-black/40 px-2.5 text-white drop-shadow-md hover:bg-black/60"
+                    className="pointer-events-auto flex items-center justify-center rounded-lg bg-black/40 px-2.5 text-white drop-shadow-md hover:bg-black/60"
                   >
                     {isFullscreen ? (
                       <Minimize className="size-5" />
