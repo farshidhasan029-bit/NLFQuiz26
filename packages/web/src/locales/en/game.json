@@ -181,5 +181,6 @@
   "allQuestionsCompletedDesc": "You have completed all questions!",
   "someQuestionsRemainDesc": "You have answered {{answered}} of {{total}} questions ({{remain}} remaining).",
   "jumpToUnansweredBtn": "Review Unanswered",
-  "quizSubmittedTitle": "Quiz Submitted!"
+  "quizSubmittedTitle": "Quiz Submitted!",
+  "tapPlayerIconForEval": "Tap player icon to view evaluation"
 }

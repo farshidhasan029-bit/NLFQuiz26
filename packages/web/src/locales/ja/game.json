@@ -181,5 +181,6 @@
   "allQuestionsCompletedDesc": "すべての質問に回答しました！",
   "someQuestionsRemainDesc": "{{total}}問中{{answered}}問に回答しました（残り{{remain}}問）。",
   "jumpToUnansweredBtn": "未回答を確認する",
-  "quizSubmittedTitle": "クイズを提出しました！"
+  "quizSubmittedTitle": "クイズを提出しました！",
+  "tapPlayerIconForEval": "プレイヤーアイコンをタップして評価を表示"
 }

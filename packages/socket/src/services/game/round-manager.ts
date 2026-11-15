@@ -829,6 +829,69 @@ export class RoundManager {
     const player = finalPlayers[playerIndex]
     const rank = playerIndex + 1
     const totalPlayers = finalPlayers.length
+
+    if (this.questionsHistory.length === 0 && this.opts.getSettings().selfPaced) {
+      const pState = this.playerPacedMap.get(player.id)
+      const totalQuestions = this.opts.quizz.questions.length
+      let correctCount = 0
+      let incorrectCount = 0
+      let unansweredCount = 0
+      let totalPoints = 0
+
+      const questions: PlayerQuestionEvaluation[] =
+        this.opts.quizz.questions.map((q, idx) => {
+          const playerAnswerIds = pState?.answers.get(idx) ?? null
+          const hasAnswer =
+            playerAnswerIds !== null && playerAnswerIds.length > 0
+          let isCorrect = false
+          let points = 0
+
+          if (!hasAnswer) {
+            unansweredCount++
+          } else {
+            isCorrect = Boolean(
+              q.solutions &&
+                playerAnswerIds.some((id) => q.solutions?.includes(id)),
+            )
+            if (isCorrect) {
+              correctCount++
+              points = q.maxPoints ?? MAX_POINTS
+              totalPoints += points
+            } else {
+              incorrectCount++
+            }
+          }
+
+          return {
+            questionIndex: idx,
+            question: q.question,
+            answers: q.answers,
+            playerAnswerIds,
+            solutions: q.solutions,
+            correct: isCorrect,
+            points,
+          }
+        })
+
+      const accuracyPct =
+        totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0
+      const cheatPenalty = this.playerCheatPenalties.get(player.id) ?? 0
+
+      return {
+        username: player.username,
+        rank,
+        totalPlayers,
+        points: totalPoints,
+        totalQuestions,
+        correctCount,
+        incorrectCount,
+        unansweredCount,
+        accuracyPct,
+        cheatPenaltyPoints: cheatPenalty > 0 ? cheatPenalty : undefined,
+        questions,
+      }
+    }
+
     const totalQuestions = this.questionsHistory.length
 
     let correctCount = 0

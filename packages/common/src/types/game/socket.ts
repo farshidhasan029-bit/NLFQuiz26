@@ -136,6 +136,10 @@ export interface ServerToClientEvents {
   [EVENTS.MANAGER.RESULT_REQUESTS_UPDATE]: (
     _requests: ResultQueryRequest[],
   ) => void
+  [EVENTS.MANAGER.PLAYER_EVALUATION]: (_data: {
+    playerId: string
+    evaluation: PlayerFullEvaluation | null
+  }) => void
 }
 
 type ClientEventValidators = typeof clientEventValidators

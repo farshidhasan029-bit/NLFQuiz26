@@ -41,4 +41,7 @@ export const clientEventValidators = {
     allowAll: z.boolean().optional(),
     approved: z.boolean(),
   }),
+  [EVENTS.MANAGER.GET_PLAYER_EVALUATION]: gameMessageValidator.extend({
+    playerId: z.string().min(1),
+  }),
 }

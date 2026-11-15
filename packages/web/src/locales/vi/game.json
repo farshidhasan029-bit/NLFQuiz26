@@ -181,5 +181,6 @@
   "allQuestionsCompletedDesc": "Bạn đã hoàn thành tất cả các câu hỏi!",
   "someQuestionsRemainDesc": "Bạn đã trả lời {{answered}} trên {{total}} câu hỏi (còn lại {{remain}} câu).",
   "jumpToUnansweredBtn": "Xem lại câu chưa trả lời",
-  "quizSubmittedTitle": "Đã nộp bài kiểm tra!"
+  "quizSubmittedTitle": "Đã nộp bài kiểm tra!",
+  "tapPlayerIconForEval": "Chạm vào biểu tượng người chơi để xem đánh giá"
 }

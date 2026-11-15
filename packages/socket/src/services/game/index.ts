@@ -754,6 +754,18 @@ class Game {
         Array.from(this.pendingResultRequests.values()),
       )
   }
+
+  getPlayerEvaluation(socket: Socket, playerIdentifier: string): void {
+    if (socket.id !== this._manager.id) {
+      return
+    }
+
+    const evaluation = this.round.getPlayerEvaluation(playerIdentifier)
+    socket.emit(EVENTS.MANAGER.PLAYER_EVALUATION, {
+      playerId: playerIdentifier,
+      evaluation,
+    })
+  }
 }
 
 export default Game

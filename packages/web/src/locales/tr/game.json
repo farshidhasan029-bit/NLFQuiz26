@@ -181,5 +181,6 @@
   "allQuestionsCompletedDesc": "Tüm soruları tamamladınız!",
   "someQuestionsRemainDesc": "{{total}} sorudan {{answered}} tanesini cevapladınız ({{remain}} kaldı).",
   "jumpToUnansweredBtn": "Cevapsızları İncele",
-  "quizSubmittedTitle": "Test Gönderildi!"
+  "quizSubmittedTitle": "Test Gönderildi!",
+  "tapPlayerIconForEval": "Değerlendirmeyi görmek için oyuncu simgesine dokunun"
 }

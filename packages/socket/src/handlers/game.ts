@@ -165,6 +165,12 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
       ),
   )
 
+  socket.on(EVENTS.MANAGER.GET_PLAYER_EVALUATION, ({ gameId, playerId }) =>
+    withManagerGame(gameId, socket, (game) =>
+      game.getPlayerEvaluation(socket, playerId),
+    ),
+  )
+
   socket.on(EVENTS.MANAGER.ADVANCE, ({ gameId }) =>
     withManagerGame(gameId, socket, (game) => game.advance()),
   )

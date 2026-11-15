@@ -181,5 +181,6 @@
   "allQuestionsCompletedDesc": "Vous avez répondu à toutes les questions !",
   "someQuestionsRemainDesc": "Vous avez répondu à {{answered}} sur {{total}} questions ({{remain}} restante(s)).",
   "jumpToUnansweredBtn": "Vérifier les sans réponse",
-  "quizSubmittedTitle": "Quiz soumis !"
+  "quizSubmittedTitle": "Quiz soumis !",
+  "tapPlayerIconForEval": "Appuyez sur l'icône du joueur pour voir l'évaluation"
 }

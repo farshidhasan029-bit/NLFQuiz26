@@ -53,6 +53,8 @@ export const EVENTS = {
     RESUME_GAME: "manager:resumeGame",
     RESPOND_RESULT_REQUEST: "manager:respondResultRequest",
     RESULT_REQUESTS_UPDATE: "manager:resultRequestsUpdate",
+    GET_PLAYER_EVALUATION: "manager:getPlayerEvaluation",
+    PLAYER_EVALUATION: "manager:playerEvaluation",
   },
 } as const
 
