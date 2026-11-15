@@ -1,3 +1,4 @@
+import type { AntiCheatMode } from "@razzia/common/types/game"
 import { EVENTS } from "@razzia/common/constants"
 import { STATUS, type Status } from "@razzia/common/types/game/status"
 import { useSocket } from "@razzia/web/features/game/contexts/socket-context"
@@ -7,6 +8,7 @@ interface AntiCheatOptions {
   enabled: boolean
   gameId: string | null
   statusName: Status | undefined
+  mode?: AntiCheatMode
 }
 
 // 1. Width ratio: If the browser window takes less than 70% of available screen width,
@@ -35,9 +37,11 @@ export const useAntiCheat = ({
   enabled,
   gameId,
   statusName,
+  mode = "kick",
 }: AntiCheatOptions) => {
   const { socket } = useSocket()
   const reportedRef = useRef(false)
+  const lastViolationReportedAtRef = useRef(0)
   const mountTimeRef = useRef(Date.now())
   const lastInteractionRef = useRef(Date.now())
   const isScreenLockedRef = useRef(false)
@@ -62,7 +66,10 @@ export const useAntiCheat = ({
   }, [statusName])
 
   useEffect(() => {
-    if (!enabled || !gameId || !isGuardedState || reportedRef.current) {
+    if (!enabled || !gameId || !isGuardedState) {
+      return
+    }
+    if (mode === "kick" && reportedRef.current) {
       return
     }
 
@@ -99,7 +106,12 @@ export const useAntiCheat = ({
     acquireWakeLock()
 
     const reportViolation = (reason: string) => {
-      if (reportedRef.current) return
+      if (mode === "penalty") {
+        if (Date.now() - lastViolationReportedAtRef.current < 6000) return
+      } else {
+        if (reportedRef.current) return
+      }
+
       // Never report if browser is offline or socket is disconnected (network disruption)
       if (typeof navigator !== "undefined" && !navigator.onLine) return
       if (!socket.connected) return
@@ -111,7 +123,12 @@ export const useAntiCheat = ({
       // Never report if the device screen waited and locked automatically
       if (isScreenLockedRef.current) return
 
-      reportedRef.current = true
+      if (mode === "penalty") {
+        lastViolationReportedAtRef.current = Date.now()
+      } else {
+        reportedRef.current = true
+      }
+
       socket.emit(EVENTS.PLAYER.CHEATING_DETECTED, {
         gameId,
         reason,
@@ -389,5 +406,5 @@ export const useAntiCheat = ({
       window.removeEventListener("pagehide", handlePageHide)
       releaseWakeLock()
     }
-  }, [enabled, gameId, isGuardedState, socket])
+  }, [enabled, gameId, isGuardedState, mode, socket])
 }

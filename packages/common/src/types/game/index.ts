@@ -103,10 +103,14 @@ export interface UltimateTimerSettings {
   duration: number
 }
 
+export type AntiCheatMode = "kick" | "penalty"
+
 export interface GameSettings {
   generatedUsernames: boolean
   answersOnly: boolean
   detectScreenSplit: boolean
+  antiCheatMode: AntiCheatMode
+  antiCheatPenaltyPoints: number
   pauseOnDisconnect: boolean
   hidePlayerResults: boolean
   autoAdvance: AutoAdvanceSettings
@@ -178,6 +182,7 @@ export interface PlayerFullEvaluation {
   incorrectCount: number
   unansweredCount: number
   accuracyPct: number
+  cheatPenaltyPoints?: number
   questions: PlayerQuestionEvaluation[]
 }
 

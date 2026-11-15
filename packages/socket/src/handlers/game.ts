@@ -135,7 +135,7 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
 
   socket.on(EVENTS.PLAYER.CHEATING_DETECTED, ({ gameId, reason }) =>
     withPlayerGame(gameId, socket, (game) =>
-      game.expelCheater(socket, reason),
+      game.handleCheatingDetected(socket, reason),
     ),
   )
 

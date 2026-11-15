@@ -30,6 +30,8 @@ export const gameSettingsSchema = z.object({
   generatedUsernames: z.boolean(),
   answersOnly: z.boolean(),
   detectScreenSplit: z.boolean(),
+  antiCheatMode: z.enum(["kick", "penalty"]).default("kick"),
+  antiCheatPenaltyPoints: z.number().int().min(1).max(100000).default(500),
   pauseOnDisconnect: z.boolean().default(true),
   hidePlayerResults: z.boolean().default(true),
   autoAdvance: z.object({

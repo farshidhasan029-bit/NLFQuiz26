@@ -69,6 +69,26 @@ const HostSelfPaced = ({ data: { questions, totalQuestions } }: Props) => {
   )
 
   useEvent(
+    EVENTS.MANAGER.PLAYER_PENALIZED,
+    ({
+      playerId,
+      currentPoints,
+    }: {
+      playerId: string
+      currentPoints: number
+    }) => {
+      setProgressMap((prev) => {
+        const existing = prev.get(playerId)
+        if (!existing) return prev
+        const next = new Map(prev)
+        next.set(playerId, { ...existing, points: currentPoints })
+        return next
+      })
+    },
+    [socket],
+  )
+
+  useEvent(
     EVENTS.MANAGER.PLAYER_KICKED,
     (kickedPlayerId: string) => {
       setProgressMap((prev) => {

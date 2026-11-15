@@ -100,6 +100,8 @@ export class PlayerManager {
       username,
       gameMode: this.gameMode,
       detectScreenSplit: this.getSettings?.().detectScreenSplit ?? true,
+      antiCheatMode: this.getSettings?.().antiCheatMode ?? "kick",
+      antiCheatPenaltyPoints: this.getSettings?.().antiCheatPenaltyPoints ?? 500,
       hidePlayerResults: this.getSettings?.().hidePlayerResults ?? true,
     })
 

@@ -52,7 +52,14 @@
     },
     "antiCheat": {
       "label": "Anti-Cheat Protection",
-      "hint": "Automatically expels participants who split their screen or switch windows during the quiz."
+      "hint": "Monitors screen splitting and window switching during the quiz.",
+      "modeLabel": "Enforcement Action",
+      "modeKick": "Automatically Kick Out",
+      "modeKickHint": "Expels participant and blocks re-entry upon cheating",
+      "modePenalty": "Negative Marking",
+      "modePenaltyHint": "Deducts marks when cheating is detected",
+      "penaltyPoints": "Penalty Marks (pts)",
+      "penaltyPointsHint": "Marks deducted per detected violation"
     },
     "title": "Game settings",
     "hidePlayerResults": {
@@ -78,8 +85,11 @@
     }
   },
   "antiCheat": {
-    "banner": "Anti-cheat active: Screen splitting or window switching will result in expulsion.",
-    "managerAlert": "{{username}} was expelled for screen-splitting / cheating."
+    "banner": "Anti-cheat active: Screen splitting or window switching will result in penalties.",
+    "managerAlert": "{{username}} was expelled for screen-splitting / cheating.",
+    "managerPenaltyAlert": "{{username}} was penalized -{{penaltyPoints}} marks for cheating.",
+    "penaltyAlert": "Cheating detected! -{{penaltyPoints}} marks deducted (Score: {{currentPoints}}).",
+    "evaluationPenalty": "Cheating Penalty (Negative Marking): -{{points}} pts"
   },
   "connectionDisrupted": "Network connection disrupted. Reconnecting... (Your progress is saved)",
   "reconnecting": "Reconnecting to quiz... Your progress is saved",

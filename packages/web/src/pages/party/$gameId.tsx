@@ -25,7 +25,7 @@ const PlayerGamePage = () => {
   const navigate = useNavigate()
   const { socket, isConnected } = useSocket()
   const { gameId: gameIdParam } = useParams({ from: "/party/$gameId" })
-  const { status, updatePlayer, resetPlayer, detectScreenSplit } = usePlayerStore()
+  const { status, updatePlayer, resetPlayer, detectScreenSplit, antiCheatMode } = usePlayerStore()
   const { setQuestionStates } = useQuestionStore()
   const { t } = useTranslation()
   const syncedRef = useRef(false)
@@ -35,6 +35,7 @@ const PlayerGamePage = () => {
     enabled: detectScreenSplit,
     gameId: gameIdParam,
     statusName: status?.name,
+    mode: antiCheatMode,
   })
 
   useEffect(() => {
@@ -88,6 +89,8 @@ const PlayerGamePage = () => {
       gameId: reconnectGameId,
       gameMode,
       detectScreenSplit: serverDetectScreenSplit,
+      antiCheatMode: serverAntiCheatMode,
+      antiCheatPenaltyPoints: serverAntiCheatPenaltyPoints,
       hidePlayerResults: serverHidePlayerResults,
       status: reconnectStatus,
       player,
@@ -97,6 +100,10 @@ const PlayerGamePage = () => {
         gameId: reconnectGameId,
         gameMode,
         detectScreenSplit: serverDetectScreenSplit ?? true,
+        ...(serverAntiCheatMode && { antiCheatMode: serverAntiCheatMode }),
+        ...(serverAntiCheatPenaltyPoints !== undefined && {
+          antiCheatPenaltyPoints: serverAntiCheatPenaltyPoints,
+        }),
         hidePlayerResults: serverHidePlayerResults ?? true,
         status: createStatus(reconnectStatus.name, reconnectStatus.data),
         player,
@@ -107,11 +114,24 @@ const PlayerGamePage = () => {
 
   useEvent(EVENTS.GAME.STATUS, ({ name, data }) => {
     if (name in GAME_STATE_COMPONENTS) {
-      const dataObj = data as { detectScreenSplit?: boolean; hidePlayerResults?: boolean } | undefined
+      const dataObj = data as
+        | {
+            detectScreenSplit?: boolean
+            antiCheatMode?: any
+            antiCheatPenaltyPoints?: number
+            hidePlayerResults?: boolean
+          }
+        | undefined
       updatePlayer({
         status: createStatus(name, data),
         ...(dataObj?.detectScreenSplit !== undefined && {
           detectScreenSplit: dataObj.detectScreenSplit,
+        }),
+        ...(dataObj?.antiCheatMode !== undefined && {
+          antiCheatMode: dataObj.antiCheatMode,
+        }),
+        ...(dataObj?.antiCheatPenaltyPoints !== undefined && {
+          antiCheatPenaltyPoints: dataObj.antiCheatPenaltyPoints,
         }),
         ...(dataObj?.hidePlayerResults !== undefined && {
           hidePlayerResults: dataObj.hidePlayerResults,
@@ -119,6 +139,35 @@ const PlayerGamePage = () => {
       })
     }
   })
+
+  useEvent(
+    EVENTS.PLAYER.CHEATING_PENALTY,
+    ({
+      penaltyPoints,
+      currentPoints,
+    }: {
+      penaltyPoints: number
+      currentPoints: number
+    }) => {
+      updatePlayer((prev) => ({
+        ...prev,
+        player: prev.player
+          ? { ...prev.player, points: currentPoints }
+          : null,
+      }))
+      toast.error(
+        t("game:antiCheat.penaltyAlert", {
+          penaltyPoints,
+          currentPoints,
+        }),
+        {
+          duration: 6000,
+          id: "anti-cheat-penalty-toast",
+        },
+      )
+    },
+    [socket],
+  )
 
   useEvent(EVENTS.GAME.RESET, (message) => {
     localStorage.removeItem("game_pin")

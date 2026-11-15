@@ -166,6 +166,43 @@ describe("joining a game", () => {
       "errors:game.expelledForCheating",
     )
   })
+
+  it("applies negative marking when antiCheatMode is penalty", () => {
+    const { game, lastEvent, createSocket } = setup(createQuizz([createQuestion()]))
+    game.updateSettings({
+      antiCheatMode: "penalty",
+      antiCheatPenaltyPoints: 300,
+    })
+
+    const aliceSocket = createSocket("alice", "alice")
+    const alicePlayer = game.players.find((p) => p.id === "alice")!
+    alicePlayer.points = 1000
+
+    game.handleCheatingDetected(aliceSocket, "tab_switch")
+
+    // Alice is NOT expelled
+    expect(game.players.map((p) => p.username)).toContain("Alice")
+    expect(game.isExpelled("alice")).toBe(false)
+
+    // Alice points deducted by 300
+    expect(alicePlayer.points).toBe(700)
+
+    // Penalty event sent to player
+    expect(lastEvent("alice", EVENTS.PLAYER.CHEATING_PENALTY)?.data).toEqual({
+      penaltyPoints: 300,
+      currentPoints: 700,
+      reason: "tab_switch",
+    })
+
+    // Manager alerted
+    expect(lastEvent(MANAGER, EVENTS.MANAGER.PLAYER_PENALIZED)?.data).toEqual({
+      playerId: "alice",
+      username: "Alice",
+      penaltyPoints: 300,
+      currentPoints: 700,
+      reason: "tab_switch",
+    })
+  })
 })
 
 describe("quiz flow", () => {

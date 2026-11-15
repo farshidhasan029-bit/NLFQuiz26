@@ -1,5 +1,5 @@
 import { QUIZZ_MODES } from "@razzia/common/constants"
-import type { QuizzMode } from "@razzia/common/types/game"
+import type { AntiCheatMode, QuizzMode } from "@razzia/common/types/game"
 import type { StatusDataMap } from "@razzia/common/types/game/status"
 import type { Status } from "@razzia/web/features/game/utils/createStatus"
 import { create } from "zustand"
@@ -15,6 +15,8 @@ interface PlayerState<T> {
   gameMode: QuizzMode
   generatedUsernames: boolean
   detectScreenSplit: boolean
+  antiCheatMode: AntiCheatMode
+  antiCheatPenaltyPoints: number
   hidePlayerResults: boolean
   joinTicket: string | null
   player: PlayerInfo | null
@@ -61,6 +63,8 @@ const initialState: PlayerState<StatusDataMap> = {
   gameMode: QUIZZ_MODES.QUIZ,
   generatedUsernames: false,
   detectScreenSplit: true,
+  antiCheatMode: "kick",
+  antiCheatPenaltyPoints: 500,
   hidePlayerResults: true,
   joinTicket: null,
   player: readStoredPlayer(),

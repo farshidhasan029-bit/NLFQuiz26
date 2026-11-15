@@ -74,6 +74,27 @@ const ManagerGamePage = () => {
     })
   })
 
+  useEvent(
+    EVENTS.MANAGER.PLAYER_PENALIZED,
+    ({
+      username,
+      penaltyPoints,
+    }: {
+      username: string
+      penaltyPoints: number
+    }) => {
+      toast.error(
+        t("game:antiCheat.managerPenaltyAlert", {
+          username,
+          penaltyPoints,
+        }),
+        {
+          duration: 5000,
+        },
+      )
+    },
+  )
+
   useEvent(EVENTS.GAME.RESET, (message) => {
     navigate({ to: "/manager/config" })
     resetManager()

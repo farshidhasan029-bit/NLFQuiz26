@@ -250,6 +250,64 @@ class Game {
     }
   }
 
+  private playerLastPenaltyTime = new Map<string, number>()
+
+  handleCheatingDetected(socket: Socket, reason?: string) {
+    if (this._settings.antiCheatMode === "penalty") {
+      this.penalizeCheater(socket, reason)
+    } else {
+      this.expelCheater(socket, reason)
+    }
+  }
+
+  penalizeCheater(socket: Socket, reason?: string) {
+    const clientId = getClientId(socket)
+    const player =
+      this.playerManager.findById(socket.id) ||
+      (clientId ? this.playerManager.findByClientId(clientId) : undefined)
+    if (!player) {
+      return
+    }
+
+    const now = Date.now()
+    const lastPenalty = this.playerLastPenaltyTime.get(player.id) ?? 0
+    if (now - lastPenalty < 5000) {
+      return
+    }
+    this.playerLastPenaltyTime.set(player.id, now)
+
+    const penaltyPoints = this._settings.antiCheatPenaltyPoints || 500
+    player.points = Math.max(0, player.points - penaltyPoints)
+
+    this.round.recordCheatPenalty(player.id, penaltyPoints)
+
+    const username = player.username
+    const playerId = player.id
+
+    // Notify player
+    socket.emit(EVENTS.PLAYER.CHEATING_PENALTY, {
+      penaltyPoints,
+      currentPoints: player.points,
+      reason: reason || "screen_split",
+    })
+
+    // Notify manager
+    this.io.to(this._manager.id).emit(EVENTS.MANAGER.PLAYER_PENALIZED, {
+      playerId,
+      username,
+      penaltyPoints,
+      currentPoints: player.points,
+      reason: reason || "screen_split",
+    })
+
+    // Update manager player list
+    this.io.to(this._manager.id).emit(EVENTS.MANAGER.PLAYER_UPDATED, {
+      id: playerId,
+      points: player.points,
+      username: player.username,
+    })
+  }
+
   expelCheater(socket: Socket, reason?: string) {
     const clientId = getClientId(socket)
     const player =
@@ -391,6 +449,8 @@ class Game {
       gameId: this.gameId,
       gameMode: this.gameMode,
       detectScreenSplit: this._settings.detectScreenSplit,
+      antiCheatMode: this._settings.antiCheatMode,
+      antiCheatPenaltyPoints: this._settings.antiCheatPenaltyPoints,
       hidePlayerResults: this._settings.hidePlayerResults,
       currentQuestion: this.round.getReconnectInfo(),
       status,

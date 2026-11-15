@@ -92,6 +92,12 @@ export class RoundManager {
     { answers: Map<number, number[]>; skipped: Set<number>; finished: boolean }
   >()
   private sanitizedQuestions: SanitizedQuestion[] = []
+  private playerCheatPenalties = new Map<string, number>()
+
+  recordCheatPenalty(playerId: string, points: number): void {
+    const prev = this.playerCheatPenalties.get(playerId) ?? 0
+    this.playerCheatPenalties.set(playerId, prev + points)
+  }
 
   getUltimateTimerState() {
     const settings = this.opts.getSettings()
@@ -396,6 +402,8 @@ export class RoundManager {
       totalQuestions: this.sanitizedQuestions.length,
       gameMode: this.opts.quizz.gameMode,
       detectScreenSplit: this.opts.getSettings().detectScreenSplit,
+      antiCheatMode: this.opts.getSettings().antiCheatMode ?? "kick",
+      antiCheatPenaltyPoints: this.opts.getSettings().antiCheatPenaltyPoints ?? 500,
       hidePlayerResults: this.opts.getSettings().hidePlayerResults,
     }
 
@@ -472,6 +480,13 @@ export class RoundManager {
           }
         }),
       })
+    }
+
+    for (const player of currentPlayers) {
+      const penalty = this.playerCheatPenalties.get(player.id) ?? 0
+      if (penalty > 0) {
+        player.points = Math.max(0, player.points - penalty)
+      }
     }
 
     const finalSorted = [...currentPlayers].sort((a, b) => b.points - a.points)
@@ -593,6 +608,8 @@ export class RoundManager {
       options: this.question.options,
       answersOnly: this.opts.getSettings().answersOnly,
       detectScreenSplit: this.opts.getSettings().detectScreenSplit,
+      antiCheatMode: this.opts.getSettings().antiCheatMode ?? "kick",
+      antiCheatPenaltyPoints: this.opts.getSettings().antiCheatPenaltyPoints ?? 500,
     })
 
     await this.opts.cooldown.start(this.question.time)
@@ -836,6 +853,7 @@ export class RoundManager {
 
     const accuracyPct =
       totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0
+    const cheatPenalty = this.playerCheatPenalties.get(player.id) ?? 0
 
     return {
       username: player.username,
@@ -847,6 +865,7 @@ export class RoundManager {
       incorrectCount,
       unansweredCount,
       accuracyPct,
+      cheatPenaltyPoints: cheatPenalty > 0 ? cheatPenalty : undefined,
       questions,
     }
   }

@@ -30,6 +30,7 @@ export const EVENTS = {
     SEND_REACTION: "player:sendReaction",
     REQUEST_RESULTS: "player:requestResults",
     RESULTS_EVALUATION: "player:resultsEvaluation",
+    CHEATING_PENALTY: "player:cheatingPenalty",
   },
   MANAGER: {
     SUCCESS_RECONNECT: "manager:successReconnect",
@@ -38,6 +39,7 @@ export const EVENTS = {
     REMOVE_PLAYER: "manager:removePlayer",
     PLAYER_KICKED: "manager:playerKicked",
     PLAYER_EXPELLED: "manager:playerExpelled",
+    PLAYER_PENALIZED: "manager:playerPenalized",
     PLAYER_UPDATED: "manager:playerUpdated",
     RECONNECT: "manager:reconnect",
     LEAVE: "manager:leave",
@@ -67,6 +69,8 @@ export const createDefaultGameSettings = (): GameSettings => ({
   generatedUsernames: false,
   answersOnly: false,
   detectScreenSplit: true,
+  antiCheatMode: "kick",
+  antiCheatPenaltyPoints: 500,
   pauseOnDisconnect: true,
   hidePlayerResults: true,
   autoAdvance: {

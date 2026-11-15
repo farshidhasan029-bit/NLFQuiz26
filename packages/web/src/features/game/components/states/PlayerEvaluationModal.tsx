@@ -4,7 +4,7 @@ import {
   ANSWERS_LABELS,
 } from "@razzia/web/features/game/utils/constants"
 import clsx from "clsx"
-import { Award, Check, HelpCircle, Trophy, X } from "lucide-react"
+import { AlertTriangle, Award, Check, HelpCircle, Trophy, X } from "lucide-react"
 import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -110,6 +110,20 @@ const PlayerEvaluationModal = ({ evaluation, onClose }: Props) => {
                 )}
               </div>
             </div>
+
+            {Boolean(
+              evaluation.cheatPenaltyPoints &&
+                evaluation.cheatPenaltyPoints > 0,
+            ) && (
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-red-500/15 border border-red-500/30 px-3 py-2 text-xs text-red-200">
+                <AlertTriangle className="size-4 text-red-400 shrink-0" />
+                <span className="font-semibold">
+                  {t("game:antiCheat.evaluationPenalty", {
+                    points: evaluation.cheatPenaltyPoints,
+                  })}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Question Breakdown List */}
