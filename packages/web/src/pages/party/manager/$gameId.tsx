@@ -41,6 +41,24 @@ const ManagerGamePage = () => {
     }
   }, [isConnected, gameIdParam, socket])
 
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        if (!socket.connected) {
+          socket.connect()
+        } else if (gameIdParam) {
+          socket.emit(EVENTS.MANAGER.RECONNECT, { gameId: gameIdParam })
+        }
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility)
+    window.addEventListener("focus", handleVisibility)
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility)
+      window.removeEventListener("focus", handleVisibility)
+    }
+  }, [socket, gameIdParam])
+
   useEvent(
     EVENTS.MANAGER.SUCCESS_RECONNECT,
     ({

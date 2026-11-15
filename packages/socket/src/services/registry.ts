@@ -59,6 +59,10 @@ class Registry {
   }
 
   markGameAsEmpty(game: Game): void {
+    if (game.players.length > 0) {
+      return
+    }
+
     const alreadyEmpty = this.emptyGames.find(
       (g) => g.game.gameId === game.gameId,
     )

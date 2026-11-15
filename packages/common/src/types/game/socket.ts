@@ -49,7 +49,14 @@ export interface ServerToClientEvents {
     username: string
     gameMode: QuizzMode
     detectScreenSplit?: boolean
+    antiCheatMode?: "kick" | "penalty"
+    antiCheatPenaltyPoints?: number
     hidePlayerResults?: boolean
+    status?: {
+      name: Status
+      data: StatusDataMap[Status]
+    }
+    currentQuestion?: GameUpdateQuestion | null
   }) => void
   [EVENTS.GAME.TOTAL_PLAYERS]: (_count: number) => void
   [EVENTS.GAME.ERROR_MESSAGE]: (_message: string) => void

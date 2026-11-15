@@ -21,7 +21,9 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
 
   const handleManagerLeave = (game: Game) => {
     game.setManagerDisconnected()
-    registry.markGameAsEmpty(game)
+    if (game.players.length === 0) {
+      registry.markGameAsEmpty(game)
+    }
 
     if (!game.started) {
       closeLobby(game)
@@ -30,7 +32,9 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
 
   const handleManagerDisconnect = (game: Game) => {
     game.setManagerDisconnected()
-    registry.markGameAsEmpty(game)
+    if (game.players.length === 0) {
+      registry.markGameAsEmpty(game)
+    }
 
     if (!game.started) {
       game.waitForManager(() => closeLobby(game))

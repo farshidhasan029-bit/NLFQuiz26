@@ -111,11 +111,18 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       setIsConnected(false)
     }
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && !socketClient.connected) {
+        socketClient.connect()
+      }
+    }
+
     socketClient.on("connect", handleConnect)
     socketClient.on("disconnect", handleDisconnect)
     socketClient.on("connect_error", handleError)
     window.addEventListener("online", handleOnline)
     window.addEventListener("offline", handleOffline)
+    document.addEventListener("visibilitychange", handleVisibilityChange)
 
     return () => {
       socketClient.off("connect", handleConnect)
@@ -123,6 +130,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       socketClient.off("connect_error", handleError)
       window.removeEventListener("online", handleOnline)
       window.removeEventListener("offline", handleOffline)
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
       socketClient.disconnect()
     }
   }, [t])

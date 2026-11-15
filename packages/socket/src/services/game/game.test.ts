@@ -1036,4 +1036,71 @@ describe("selfPaced (exam mode with question skipping & revisiting)", () => {
       approved: false,
     })
   })
+
+  it("allows participants to join and answer questions smoothly while host is offline / disconnected after starting", async () => {
+    const q1 = createQuestion()
+    const q2 = createQuestion()
+    const quizz = createQuizz([q1, q2])
+    const { game, manager, sockets, createSocket, lastEvent, lastStatus } =
+      setup(quizz, ["Alice"], {
+        selfPaced: true,
+        autoAdvance: {
+          enabled: true,
+          timeLimit: 0,
+          leaderboardDelay: 0,
+          revealDelay: 0,
+        },
+      })
+
+    const alice = sockets[0]
+
+    // Start game
+    void game.start(manager)
+    await vi.advanceTimersByTimeAsync(6000)
+    expect(game.started).toBe(true)
+    expect(lastStatus(game.gameId)?.name).toBe(STATUS.SELF_PACED_QUIZ)
+
+    // Host goes offline / switches app
+    game.setManagerDisconnected()
+    expect(game.manager.connected).toBe(false)
+
+    // Bob joins AFTER game has started and while host is offline
+    const bob = createSocket("bob")
+    const joinError = game.join(bob, "Bob")
+    expect(joinError).toBeNull()
+
+    // Bob should immediately receive active status SELF_PACED_QUIZ with questions
+    const bobJoinEvent = lastEvent(bob.id, EVENTS.GAME.SUCCESS_JOIN)
+    expect(bobJoinEvent?.data).toMatchObject({
+      username: "Bob",
+      status: {
+        name: STATUS.SELF_PACED_QUIZ,
+      },
+    })
+    expect(bobJoinEvent?.data.status.data.questions).toHaveLength(2)
+
+    // Both Alice and Bob answer and submit questions smoothly without host
+    game.selectAnswer(alice, [0], 0)
+    game.selectAnswer(alice, [1], 1)
+    game.submitQuiz(alice)
+
+    game.selectAnswer(bob, [1], 0)
+    game.selectAnswer(bob, [0], 1)
+    game.submitQuiz(bob)
+
+    // Game completes smoothly without host present
+    expect(game.started).toBe(false)
+    expect(lastStatus(alice.id)?.name).toBe(STATUS.FINISHED)
+    expect(lastStatus(bob.id)?.name).toBe(STATUS.FINISHED)
+
+    // Host reconnects and receives finished state
+    const managerNew = createSocket("manager-reconnected", "manager")
+    game.reconnect(managerNew)
+    expect(game.manager.connected).toBe(true)
+    const hostReconnectEvent = lastEvent(
+      managerNew.id,
+      EVENTS.MANAGER.SUCCESS_RECONNECT,
+    )
+    expect(hostReconnectEvent?.data.status.name).toBe(STATUS.FINISHED)
+  })
 })

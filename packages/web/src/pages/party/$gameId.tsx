@@ -62,6 +62,24 @@ const PlayerGamePage = () => {
     socket.emit(EVENTS.PLAYER.RECONNECT, { gameId: gameIdParam })
   }, [isConnected, gameIdParam, socket])
 
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        if (!socket.connected) {
+          socket.connect()
+        } else if (gameIdParam && !usePlayerStore.getState().joinTicket) {
+          socket.emit(EVENTS.PLAYER.RECONNECT, { gameId: gameIdParam })
+        }
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibility)
+    window.addEventListener("focus", handleVisibility)
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility)
+      window.removeEventListener("focus", handleVisibility)
+    }
+  }, [socket, gameIdParam])
+
   useEvent(
     EVENTS.GAME.SUCCESS_JOIN,
     ({
@@ -69,17 +87,30 @@ const PlayerGamePage = () => {
       username,
       gameMode,
       detectScreenSplit: serverDetectScreenSplit,
+      antiCheatMode: serverAntiCheatMode,
+      antiCheatPenaltyPoints: serverAntiCheatPenaltyPoints,
       hidePlayerResults: serverHidePlayerResults,
+      status: activeStatus,
+      currentQuestion,
     }) => {
       updatePlayer({
         gameId: joinedGameId,
         gameMode,
         detectScreenSplit: serverDetectScreenSplit ?? true,
+        ...(serverAntiCheatMode && { antiCheatMode: serverAntiCheatMode }),
+        ...(serverAntiCheatPenaltyPoints !== undefined && {
+          antiCheatPenaltyPoints: serverAntiCheatPenaltyPoints,
+        }),
         hidePlayerResults: serverHidePlayerResults ?? true,
         joinTicket: null,
         player: { username, points: 0 },
-        status: createStatus(STATUS.WAIT, { text: "game:waitingForPlayers" }),
+        status: activeStatus
+          ? createStatus(activeStatus.name, activeStatus.data)
+          : createStatus(STATUS.WAIT, { text: "game:waitingForPlayers" }),
       })
+      if (currentQuestion) {
+        setQuestionStates(currentQuestion)
+      }
     },
   )
 

@@ -200,17 +200,73 @@ class Game {
       return "errors:game.locked"
     }
 
-    if (this._settings.generatedUsernames) {
-      const taken = this.playerManager.getAll().map((player) => player.username)
+    const chosenUsername = this._settings.generatedUsernames
+      ? createNickname(this.playerManager.getAll().map((player) => player.username))
+      : username
 
-      return this.playerManager.join(socket, createNickname(taken), deviceId)
-    }
-
-    if (!username) {
+    if (!chosenUsername) {
       return "errors:auth.usernameTooShort"
     }
 
-    return this.playerManager.join(socket, username, deviceId)
+    let extraJoinData:
+      | {
+          status?: { name: Status; data: any }
+          currentQuestion?: any
+        }
+      | undefined = undefined
+
+    if (this.started) {
+      const activeStatus = this._settings.selfPaced
+        ? {
+            name: STATUS.SELF_PACED_QUIZ,
+            data: this.round.getSelfPacedPayload(),
+          }
+        : this.lastBroadcastStatus
+
+      extraJoinData = {
+        status: activeStatus ?? undefined,
+        currentQuestion: this.round.getReconnectInfo(),
+      }
+    }
+
+    const error = this.playerManager.join(
+      socket,
+      chosenUsername,
+      deviceId,
+      extraJoinData,
+    )
+    if (error) {
+      return error
+    }
+
+    if (this.started) {
+      const player = this.playerManager.findById(socket.id)
+      if (player) {
+        this.round.registerPlayer(player)
+
+        if (extraJoinData?.status) {
+          this.playerStatus.set(socket.id, extraJoinData.status)
+          socket.emit(EVENTS.GAME.STATUS, extraJoinData.status)
+        }
+
+        const reconnectInfo = this.round.getReconnectInfo()
+        if (reconnectInfo) {
+          socket.emit(EVENTS.GAME.UPDATE_QUESTION, {
+            current: reconnectInfo.current,
+            total: reconnectInfo.total,
+          })
+        }
+
+        const timerState = this.round.getUltimateTimerState()
+        if (timerState.active) {
+          socket.emit(EVENTS.GAME.ULTIMATE_TIMER_UPDATE, timerState)
+        }
+      }
+    }
+
+    registry.reactivateGame(this.gameId)
+
+    return null
   }
 
   private disconnectAutoResumeTimer: NodeJS.Timeout | null = null
@@ -402,6 +458,9 @@ class Game {
     socket.emit(EVENTS.GAME.TOTAL_PLAYERS, this.playerManager.joinedCount())
 
     registry.reactivateGame(this.gameId)
+    if (this._settings.selfPaced) {
+      this.round.emitAllPlayerProgress()
+    }
     if (this.pendingResultRequests.size > 0) {
       socket.emit(
         EVENTS.MANAGER.RESULT_REQUESTS_UPDATE,

@@ -397,18 +397,36 @@ export class RoundManager {
       })
     }
 
-    const payload = {
+    const payload = this.getSelfPacedPayload()
+
+    this.opts.broadcast(STATUS.SELF_PACED_QUIZ, payload)
+    this.emitAllPlayerProgress()
+  }
+
+  getSelfPacedPayload() {
+    return {
       questions: this.sanitizedQuestions,
       totalQuestions: this.sanitizedQuestions.length,
       gameMode: this.opts.quizz.gameMode,
       detectScreenSplit: this.opts.getSettings().detectScreenSplit,
       antiCheatMode: this.opts.getSettings().antiCheatMode ?? "kick",
-      antiCheatPenaltyPoints: this.opts.getSettings().antiCheatPenaltyPoints ?? 500,
+      antiCheatPenaltyPoints:
+        this.opts.getSettings().antiCheatPenaltyPoints ?? 500,
       hidePlayerResults: this.opts.getSettings().hidePlayerResults,
     }
+  }
 
-    this.opts.broadcast(STATUS.SELF_PACED_QUIZ, payload)
-    this.emitAllPlayerProgress()
+  registerPlayer(player: Player): void {
+    if (this.opts.getSettings().selfPaced) {
+      if (!this.playerPacedMap.has(player.id)) {
+        this.playerPacedMap.set(player.id, {
+          answers: new Map<number, number[]>(),
+          skipped: new Set<number>(),
+          finished: false,
+        })
+        this.emitPlayerProgress(player.id)
+      }
+    }
   }
 
   private emitPlayerProgress(playerId: string): void {
@@ -430,7 +448,7 @@ export class RoundManager {
       })
   }
 
-  private emitAllPlayerProgress(): void {
+  emitAllPlayerProgress(): void {
     for (const player of this.opts.players.getAll()) {
       this.emitPlayerProgress(player.id)
     }

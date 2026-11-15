@@ -42,7 +42,15 @@ export class PlayerManager {
     this.getSettings = getSettings
   }
 
-  join(socket: Socket, username: string, deviceId?: string): string | null {
+  join(
+    socket: Socket,
+    username: string,
+    deviceId?: string,
+    extraJoinData?: {
+      status?: any
+      currentQuestion?: any
+    },
+  ): string | null {
     const clientId = getClientId(socket)
 
     if (this.findByClientId(clientId)) {
@@ -103,6 +111,10 @@ export class PlayerManager {
       antiCheatMode: this.getSettings?.().antiCheatMode ?? "kick",
       antiCheatPenaltyPoints: this.getSettings?.().antiCheatPenaltyPoints ?? 500,
       hidePlayerResults: this.getSettings?.().hidePlayerResults ?? true,
+      ...(extraJoinData?.status && { status: extraJoinData.status }),
+      ...(extraJoinData?.currentQuestion && {
+        currentQuestion: extraJoinData.currentQuestion,
+      }),
     })
 
     return null
