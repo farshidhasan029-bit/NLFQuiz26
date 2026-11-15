@@ -968,5 +968,35 @@ describe("selfPaced (exam mode with question skipping & revisiting)", () => {
     expect(game.started).toBe(false)
     const finishedStatus = fake.lastStatus(manager.id)
     expect(finishedStatus?.name).toBe(STATUS.FINISHED)
+
+    // Alice queries the host to see her result and evaluation
+    game.requestPlayerResults(alice)
+    const requestUpdate = fake.lastEvent(manager.id, EVENTS.MANAGER.RESULT_REQUESTS_UPDATE)
+    expect(requestUpdate?.data).toHaveLength(1)
+    expect(requestUpdate?.data[0]).toMatchObject({
+      playerId: alice.id,
+      username: "Alice",
+    })
+
+    // Host approves Alice's request
+    game.respondResultRequest(manager, { playerId: alice.id, approved: true })
+    const aliceEvaluation = fake.lastEvent(alice.id, EVENTS.PLAYER.RESULTS_EVALUATION)
+    expect(aliceEvaluation?.data).toMatchObject({
+      approved: true,
+      evaluation: {
+        username: "Alice",
+        totalQuestions: 2,
+        rank: 1,
+      },
+    })
+    expect(aliceEvaluation?.data.evaluation.questions).toHaveLength(2)
+
+    // Bob queries the host and host denies
+    game.requestPlayerResults(bob)
+    game.respondResultRequest(manager, { playerId: bob.id, approved: false })
+    const bobEvaluation = fake.lastEvent(bob.id, EVENTS.PLAYER.RESULTS_EVALUATION)
+    expect(bobEvaluation?.data).toMatchObject({
+      approved: false,
+    })
   })
 })

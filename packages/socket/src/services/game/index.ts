@@ -4,6 +4,7 @@ import type {
   Player,
   Quizz,
   QuizzMode,
+  ResultQueryRequest,
 } from "@razzia/common/types/game"
 import type { Server, Socket } from "@razzia/common/types/game/socket"
 import {
@@ -59,6 +60,8 @@ class Game {
   >()
   private expelledClientIds = new Set<string>()
   private expelledDeviceIds = new Set<string>()
+  private pendingResultRequests = new Map<string, ResultQueryRequest>()
+  private approvedPlayerIds = new Set<string>()
 
   isExpelled(clientId: string, deviceId?: string): boolean {
     if (this.expelledClientIds.has(clientId)) {
@@ -341,6 +344,12 @@ class Game {
     socket.emit(EVENTS.GAME.TOTAL_PLAYERS, this.playerManager.joinedCount())
 
     registry.reactivateGame(this.gameId)
+    if (this.pendingResultRequests.size > 0) {
+      socket.emit(
+        EVENTS.MANAGER.RESULT_REQUESTS_UPDATE,
+        Array.from(this.pendingResultRequests.values()),
+      )
+    }
     console.log(`Manager reconnected to game ${this.inviteCode}`)
   }
 
@@ -391,6 +400,32 @@ class Game {
     if (timerState.active) {
       socket.emit(EVENTS.GAME.ULTIMATE_TIMER_UPDATE, timerState)
     }
+
+    if (this.approvedPlayerIds.has(oldSocketId)) {
+      this.approvedPlayerIds.delete(oldSocketId)
+      this.approvedPlayerIds.add(socket.id)
+      const evaluation = this.round.getPlayerEvaluation(socket.id)
+      if (evaluation) {
+        socket.emit(EVENTS.PLAYER.RESULTS_EVALUATION, {
+          approved: true,
+          evaluation,
+        })
+      }
+    } else if (this.pendingResultRequests.has(oldSocketId)) {
+      const existing = this.pendingResultRequests.get(oldSocketId)!
+      this.pendingResultRequests.delete(oldSocketId)
+      this.pendingResultRequests.set(socket.id, {
+        ...existing,
+        playerId: socket.id,
+      })
+      this.io
+        .to(this._manager.id)
+        .emit(
+          EVENTS.MANAGER.RESULT_REQUESTS_UPDATE,
+          Array.from(this.pendingResultRequests.values()),
+        )
+    }
+
     this.playerManager.broadcastCount()
 
     // If game was auto-paused due to player disconnect, check if we can resume
@@ -507,6 +542,98 @@ class Game {
 
   advance() {
     this.round.advance()
+  }
+
+  requestPlayerResults(socket: Socket): void {
+    const clientId = getClientId(socket)
+    const player = this.playerManager.findByClientId(clientId)
+
+    if (!player) {
+      return
+    }
+
+    if (this.approvedPlayerIds.has(player.id)) {
+      const evaluation = this.round.getPlayerEvaluation(player.id)
+      if (evaluation) {
+        socket.emit(EVENTS.PLAYER.RESULTS_EVALUATION, {
+          approved: true,
+          evaluation,
+        })
+        return
+      }
+    }
+
+    this.pendingResultRequests.set(player.id, {
+      playerId: player.id,
+      username: player.username,
+      requestedAt: Date.now(),
+    })
+
+    this.io
+      .to(this._manager.id)
+      .emit(
+        EVENTS.MANAGER.RESULT_REQUESTS_UPDATE,
+        Array.from(this.pendingResultRequests.values()),
+      )
+  }
+
+  respondResultRequest(
+    socket: Socket,
+    data: { playerId?: string; allowAll?: boolean; approved: boolean },
+  ): void {
+    if (socket.id !== this._manager.id) {
+      return
+    }
+
+    if (data.allowAll) {
+      if (data.approved) {
+        for (const req of this.pendingResultRequests.values()) {
+          this.approvedPlayerIds.add(req.playerId)
+          const evaluation = this.round.getPlayerEvaluation(req.playerId)
+          if (evaluation) {
+            this.io.to(req.playerId).emit(EVENTS.PLAYER.RESULTS_EVALUATION, {
+              approved: true,
+              evaluation,
+            })
+          }
+        }
+      } else {
+        for (const req of this.pendingResultRequests.values()) {
+          this.io.to(req.playerId).emit(EVENTS.PLAYER.RESULTS_EVALUATION, {
+            approved: false,
+            message: "Host declined the request at this time.",
+          })
+        }
+      }
+      this.pendingResultRequests.clear()
+    } else if (data.playerId) {
+      const req = this.pendingResultRequests.get(data.playerId)
+      if (req) {
+        if (data.approved) {
+          this.approvedPlayerIds.add(req.playerId)
+          const evaluation = this.round.getPlayerEvaluation(req.playerId)
+          if (evaluation) {
+            this.io.to(req.playerId).emit(EVENTS.PLAYER.RESULTS_EVALUATION, {
+              approved: true,
+              evaluation,
+            })
+          }
+        } else {
+          this.io.to(req.playerId).emit(EVENTS.PLAYER.RESULTS_EVALUATION, {
+            approved: false,
+            message: "Host declined the request at this time.",
+          })
+        }
+        this.pendingResultRequests.delete(data.playerId)
+      }
+    }
+
+    this.io
+      .to(this._manager.id)
+      .emit(
+        EVENTS.MANAGER.RESULT_REQUESTS_UPDATE,
+        Array.from(this.pendingResultRequests.values()),
+      )
   }
 }
 

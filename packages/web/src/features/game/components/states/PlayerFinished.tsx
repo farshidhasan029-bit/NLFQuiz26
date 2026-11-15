@@ -1,17 +1,51 @@
+import { EVENTS } from "@razzia/common/constants"
+import type { PlayerFullEvaluation } from "@razzia/common/types/game"
 import type { CommonStatusDataMap } from "@razzia/common/types/game/status"
+import PlayerEvaluationModal from "@razzia/web/features/game/components/states/PlayerEvaluationModal"
+import {
+  useEvent,
+  useSocket,
+} from "@razzia/web/features/game/contexts/socket-context"
 import { usePlayerStore } from "@razzia/web/features/game/stores/player"
+import { Award, FileText, Loader2, Trophy } from "lucide-react"
+import { useState } from "react"
+import toast from "react-hot-toast"
 import { useTranslation } from "react-i18next"
-
-import { Award, Trophy } from "lucide-react"
 
 interface Props {
   data: CommonStatusDataMap["FINISHED"]
 }
 
 const PlayerFinished = ({ data: { rank, subject } }: Props) => {
-  const { player } = usePlayerStore()
+  const { player, gameId } = usePlayerStore()
+  const { socket } = useSocket()
   const { t } = useTranslation()
   const hasRank = typeof rank === "number"
+
+  const [requestStatus, setRequestStatus] = useState<
+    "idle" | "pending" | "approved" | "denied"
+  >("idle")
+  const [evaluation, setEvaluation] = useState<PlayerFullEvaluation | null>(null)
+  const [showModal, setShowModal] = useState(false)
+
+  useEvent(EVENTS.PLAYER.RESULTS_EVALUATION, (data) => {
+    if (data.approved && data.evaluation) {
+      setRequestStatus("approved")
+      setEvaluation(data.evaluation)
+      setShowModal(true)
+      toast.success(t("game:resultRequestApprovedToast"))
+    } else {
+      setRequestStatus("denied")
+      toast.error(t("game:resultRequestDeniedToast"))
+    }
+  })
+
+  const handleSendQuery = () => {
+    if (!gameId) return
+    setRequestStatus("pending")
+    socket.emit(EVENTS.PLAYER.REQUEST_RESULTS, { gameId })
+    toast(t("game:resultRequestSentToast"))
+  }
 
   return (
     <div className="flex h-full flex-1 flex-col items-center justify-center gap-4 px-4 text-center">
@@ -45,6 +79,62 @@ const PlayerFinished = ({ data: { rank, subject } }: Props) => {
             <span>{t("game:watchHostScreenPodium")}</span>
           </div>
         </div>
+      )}
+
+      {/* Participant Result Query Action Section */}
+      <div className="mt-4 flex flex-col items-center gap-3">
+        {requestStatus === "idle" && (
+          <button
+            onClick={handleSendQuery}
+            className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-3 font-bold text-white shadow-xl hover:from-amber-400 hover:to-amber-500 transition-all transform active:scale-95"
+          >
+            <FileText className="size-5" />
+            <span>{t("game:requestResultBtn")}</span>
+          </button>
+        )}
+
+        {requestStatus === "pending" && (
+          <div className="flex flex-col items-center gap-2 rounded-2xl bg-black/40 border border-white/20 px-6 py-4 backdrop-blur-md max-w-sm">
+            <div className="flex items-center gap-2 text-amber-300 font-bold text-sm">
+              <Loader2 className="size-4 animate-spin" />
+              <span>{t("game:resultRequestPendingTitle")}</span>
+            </div>
+            <p className="text-white/80 text-xs">
+              {t("game:resultRequestPendingDesc")}
+            </p>
+          </div>
+        )}
+
+        {requestStatus === "denied" && (
+          <div className="flex flex-col items-center gap-2 rounded-2xl bg-red-950/40 border border-red-500/30 px-6 py-3 text-center max-w-sm">
+            <p className="text-xs font-semibold text-red-200">
+              {t("game:resultRequestDenied")}
+            </p>
+            <button
+              onClick={handleSendQuery}
+              className="text-xs font-bold text-amber-300 underline hover:text-amber-200"
+            >
+              {t("game:resultRequestTryAgain")}
+            </button>
+          </div>
+        )}
+
+        {requestStatus === "approved" && evaluation && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 rounded-2xl bg-emerald-600 hover:bg-emerald-500 px-6 py-3 font-bold text-white shadow-xl transition-all transform active:scale-95"
+          >
+            <Award className="size-5" />
+            <span>{t("game:viewMyEvaluationBtn")}</span>
+          </button>
+        )}
+      </div>
+
+      {showModal && evaluation && (
+        <PlayerEvaluationModal
+          evaluation={evaluation}
+          onClose={() => setShowModal(false)}
+        />
       )}
     </div>
   )

@@ -149,6 +149,18 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
     }
   })
 
+  socket.on(EVENTS.PLAYER.REQUEST_RESULTS, ({ gameId }) =>
+    withPlayerGame(gameId, socket, (game) => game.requestPlayerResults(socket)),
+  )
+
+  socket.on(
+    EVENTS.MANAGER.RESPOND_RESULT_REQUEST,
+    ({ gameId, playerId, allowAll, approved }) =>
+      withManagerGame(gameId, socket, (game) =>
+        game.respondResultRequest(socket, { playerId, allowAll, approved }),
+      ),
+  )
+
   socket.on(EVENTS.MANAGER.ADVANCE, ({ gameId }) =>
     withManagerGame(gameId, socket, (game) => game.advance()),
   )

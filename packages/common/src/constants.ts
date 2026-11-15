@@ -28,6 +28,8 @@ export const EVENTS = {
     SUBMIT_QUIZ: "player:submitQuiz",
     CHEATING_DETECTED: "player:cheatingDetected",
     SEND_REACTION: "player:sendReaction",
+    REQUEST_RESULTS: "player:requestResults",
+    RESULTS_EVALUATION: "player:resultsEvaluation",
   },
   MANAGER: {
     SUCCESS_RECONNECT: "manager:successReconnect",
@@ -47,6 +49,8 @@ export const EVENTS = {
     LOCK_UPDATED: "manager:lockUpdated",
     PAUSE_GAME: "manager:pauseGame",
     RESUME_GAME: "manager:resumeGame",
+    RESPOND_RESULT_REQUEST: "manager:respondResultRequest",
+    RESULT_REQUESTS_UPDATE: "manager:resultRequestsUpdate",
   },
 } as const
 

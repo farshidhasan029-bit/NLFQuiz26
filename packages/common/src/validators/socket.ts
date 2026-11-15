@@ -35,4 +35,10 @@ export const clientEventValidators = {
   [EVENTS.PLAYER.CHEATING_DETECTED]: gameMessageValidator.extend({
     reason: z.string().optional(),
   }),
+  [EVENTS.PLAYER.REQUEST_RESULTS]: gameMessageValidator,
+  [EVENTS.MANAGER.RESPOND_RESULT_REQUEST]: gameMessageValidator.extend({
+    playerId: z.string().optional(),
+    allowAll: z.boolean().optional(),
+    approved: z.boolean(),
+  }),
 }

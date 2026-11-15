@@ -4,7 +4,9 @@ import type {
   GameSettings,
   GameUpdateQuestion,
   Player,
+  PlayerFullEvaluation,
   QuizzMode,
+  ResultQueryRequest,
 } from "@razzia/common/types/game"
 import type { Status, StatusDataMap } from "@razzia/common/types/game/status"
 import type { clientEventValidators } from "@razzia/common/validators/socket"
@@ -87,6 +89,11 @@ export interface ServerToClientEvents {
     currentQuestion: GameUpdateQuestion | null
   }) => void
   [EVENTS.PLAYER.UPDATE_LEADERBOARD]: (_data: { leaderboard: Player[] }) => void
+  [EVENTS.PLAYER.RESULTS_EVALUATION]: (_data: {
+    approved: boolean
+    message?: string
+    evaluation?: PlayerFullEvaluation
+  }) => void
 
   // Manager events
   [EVENTS.MANAGER.SUCCESS_RECONNECT]: (_data: {
@@ -119,6 +126,9 @@ export interface ServerToClientEvents {
     timedOut: boolean
   }) => void
   [EVENTS.MANAGER.LOCK_UPDATED]: (_locked: boolean) => void
+  [EVENTS.MANAGER.RESULT_REQUESTS_UPDATE]: (
+    _requests: ResultQueryRequest[],
+  ) => void
 }
 
 type ClientEventValidators = typeof clientEventValidators

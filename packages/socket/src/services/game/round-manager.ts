@@ -13,6 +13,8 @@ import type {
   GameSettings,
   GameUpdateQuestion,
   Player,
+  PlayerFullEvaluation,
+  PlayerQuestionEvaluation,
   Question,
   QuestionResult,
   Quizz,
@@ -772,6 +774,81 @@ export class RoundManager {
         rank: hidePlayerResults ? undefined : index + 1,
       })
     })
+  }
+
+  getPlayerEvaluation(playerIdentifier: string): PlayerFullEvaluation | null {
+    const finalPlayers = this.isSurvey()
+      ? this.opts.players.getAll()
+      : this.leaderboard.length > 0
+        ? this.leaderboard
+        : this.opts.players.getAll()
+
+    const playerIndex = finalPlayers.findIndex(
+      (p) => p.id === playerIdentifier || p.username === playerIdentifier,
+    )
+
+    if (playerIndex === -1) {
+      return null
+    }
+
+    const player = finalPlayers[playerIndex]
+    const rank = playerIndex + 1
+    const totalPlayers = finalPlayers.length
+    const totalQuestions = this.questionsHistory.length
+
+    let correctCount = 0
+    let incorrectCount = 0
+    let unansweredCount = 0
+
+    const questions: PlayerQuestionEvaluation[] = this.questionsHistory.map(
+      (q, idx) => {
+        const pa = q.playerAnswers.find((a) => a.playerName === player.username)
+        const playerAnswerIds = pa?.answerIds ?? null
+        const hasAnswer = playerAnswerIds !== null && playerAnswerIds.length > 0
+
+        let isCorrect = false
+        if (!hasAnswer) {
+          unansweredCount++
+        } else {
+          isCorrect = Boolean(
+            pa?.correct ??
+              (q.solutions &&
+                playerAnswerIds.some((id) => q.solutions?.includes(id))),
+          )
+          if (isCorrect) {
+            correctCount++
+          } else {
+            incorrectCount++
+          }
+        }
+
+        return {
+          questionIndex: idx,
+          question: q.question,
+          answers: q.answers,
+          playerAnswerIds,
+          solutions: q.solutions,
+          correct: isCorrect,
+          points: pa?.points ?? 0,
+        }
+      },
+    )
+
+    const accuracyPct =
+      totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0
+
+    return {
+      username: player.username,
+      rank,
+      totalPlayers,
+      points: player.points,
+      totalQuestions,
+      correctCount,
+      incorrectCount,
+      unansweredCount,
+      accuracyPct,
+      questions,
+    }
   }
 
   // ── Player actions ───────────────────────────────────────────────────────

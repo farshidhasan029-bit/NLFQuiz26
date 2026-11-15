@@ -157,3 +157,32 @@ export interface GameResultMeta {
   winnerName?: string
   topScore?: number
 }
+
+export interface PlayerQuestionEvaluation {
+  questionIndex: number
+  question: string
+  answers: string[]
+  playerAnswerIds: number[] | null
+  solutions?: number[]
+  correct: boolean
+  points: number
+}
+
+export interface PlayerFullEvaluation {
+  username: string
+  rank: number
+  totalPlayers: number
+  points: number
+  totalQuestions: number
+  correctCount: number
+  incorrectCount: number
+  unansweredCount: number
+  accuracyPct: number
+  questions: PlayerQuestionEvaluation[]
+}
+
+export interface ResultQueryRequest {
+  playerId: string
+  username: string
+  requestedAt: number
+}
