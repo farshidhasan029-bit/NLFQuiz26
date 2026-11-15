@@ -60,7 +60,10 @@
     "estimationSolutionOutOfRange": "Poprawna odpowiedź musi mieścić się między minimum a maksimum",
     "estimationStepInvalid": "Krok musi być większy od 0",
     "estimationMarginNegative": "Margines nie może być ujemny",
-    "estimationInvalidOptions": "Brak ustawień szacowania lub są one nieprawidłowe"
+    "estimationInvalidOptions": "Brak ustawień szacowania lub są one nieprawidłowe",
+    "missingDocumentFile": "Wybierz prawidłowy plik dokumentu (.pdf, .docx, .doc, .txt)",
+    "noQuestionsExtracted": "Nie udało się wyodrębnić pytań z dokumentu.",
+    "failedToParseDocument": "Nie udało się przetworzyć pytań z dokumentu"
   },
   "result": {
     "notFound": "Nie znaleziono wyniku"

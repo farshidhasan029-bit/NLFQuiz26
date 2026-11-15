@@ -60,7 +60,10 @@
     "estimationSolutionOutOfRange": "Doğru cevap minimum ile maksimum arasında olmalıdır",
     "estimationStepInvalid": "Adım 0'dan büyük olmalıdır",
     "estimationMarginNegative": "Tolerans negatif olamaz",
-    "estimationInvalidOptions": "Tahmin ayarları eksik veya geçersiz"
+    "estimationInvalidOptions": "Tahmin ayarları eksik veya geçersiz",
+    "missingDocumentFile": "Lütfen geçerli bir belge dosyası seçin (.pdf, .docx, .doc, .txt)",
+    "noQuestionsExtracted": "Belgeden hiçbir soru çıkarılamadı.",
+    "failedToParseDocument": "Belgeden soru çıkarma işlemi başarısız oldu"
   },
   "result": {
     "notFound": "Sonuç bulunamadı"

@@ -5,13 +5,14 @@ import { SkeletonRows } from "@razzia/web/components/Skeleton"
 import {
   createQuizz,
   deleteQuizz,
+  importQuizzDocument,
   quizzKeys,
   quizzListQuery,
 } from "@razzia/web/features/manager/queries"
 import { api, ApiError, unwrap } from "@razzia/web/lib/api"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { useNavigate } from "@tanstack/react-router"
-import { Download, SquarePen, Trash2, Upload } from "lucide-react"
+import { Download, FileUp, Loader2, SquarePen, Trash2, Upload } from "lucide-react"
 import { type ChangeEvent, useRef } from "react"
 import toast from "react-hot-toast"
 import { useTranslation } from "react-i18next"
@@ -35,6 +36,7 @@ const ConfigManageQuizz = () => {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const docInputRef = useRef<HTMLInputElement>(null)
   const { t } = useTranslation()
 
   const invalidate = () =>
@@ -61,6 +63,28 @@ const ConfigManageQuizz = () => {
     },
     onError: (error) => onError(error, "errors:quizz.failedToSave"),
   })
+
+  const { mutate: importDoc, isPending: isImportingDoc } = useMutation({
+    mutationFn: importQuizzDocument,
+    onSuccess: (data) => {
+      invalidate()
+      toast.success(
+        t("manager:quizz.importedDocSuccess", { count: data.totalQuestions }),
+      )
+      navigate({
+        to: "/manager/quizz/$quizzId",
+        params: { quizzId: data.id },
+      })
+    },
+    onError: (error) => onError(error, "errors:quizz.failedToParseDocument"),
+  })
+
+  const handleDocUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    importDoc(file)
+    e.target.value = ""
+  }
 
   const handleExport = (id: string) => async () => {
     try {
@@ -101,12 +125,29 @@ const ConfigManageQuizz = () => {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="mb-4 flex shrink-0 gap-2">
+      <div className="mb-4 flex flex-wrap shrink-0 gap-2">
         <Button
-          className="flex-1"
+          className="flex-1 min-w-[120px]"
           onClick={() => navigate({ to: "/manager/quizz" })}
         >
           {t("manager:quizz.create")}
+        </Button>
+        <Button
+          className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 flex items-center gap-1.5 px-3 font-semibold text-xs sm:text-sm"
+          onClick={() => docInputRef.current?.click()}
+          disabled={isImportingDoc}
+          title={t("manager:quizz.importDoc")}
+        >
+          {isImportingDoc ? (
+            <Loader2 className="size-4 animate-spin text-primary" />
+          ) : (
+            <FileUp className="size-4" />
+          )}
+          <span>
+            {isImportingDoc
+              ? t("manager:quizz.importingDoc")
+              : t("manager:quizz.importDoc")}
+          </span>
         </Button>
         <Button
           className="bg-accent text-accent-foreground aspect-square px-3"
@@ -115,6 +156,13 @@ const ConfigManageQuizz = () => {
         >
           <Upload className="size-4" />
         </Button>
+        <input
+          ref={docInputRef}
+          type="file"
+          accept=".pdf,.docx,.doc,.txt,.rtf,.md"
+          className="hidden"
+          onChange={handleDocUpload}
+        />
         <input
           ref={fileInputRef}
           type="file"

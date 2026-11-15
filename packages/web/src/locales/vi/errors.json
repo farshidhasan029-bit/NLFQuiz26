@@ -60,7 +60,10 @@
     "estimationSolutionOutOfRange": "Đáp án đúng phải nằm giữa giá trị tối thiểu và tối đa",
     "estimationStepInvalid": "Bước nhảy phải lớn hơn 0",
     "estimationMarginNegative": "Biên độ không được âm",
-    "estimationInvalidOptions": "Cài đặt ước lượng bị thiếu hoặc không hợp lệ"
+    "estimationInvalidOptions": "Cài đặt ước lượng bị thiếu hoặc không hợp lệ",
+    "missingDocumentFile": "Vui lòng chọn tệp tài liệu hợp lệ (.pdf, .docx, .doc, .txt)",
+    "noQuestionsExtracted": "Không thể trích xuất câu hỏi từ tài liệu.",
+    "failedToParseDocument": "Lỗi khi trích xuất câu hỏi từ tài liệu"
   },
   "result": {
     "notFound": "Không tìm thấy kết quả"

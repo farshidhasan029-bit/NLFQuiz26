@@ -60,7 +60,10 @@
     "estimationSolutionOutOfRange": "Die richtige Antwort muss zwischen Minimum und Maximum liegen",
     "estimationStepInvalid": "Die Schrittweite muss größer als 0 sein",
     "estimationMarginNegative": "Die Toleranz darf nicht negativ sein",
-    "estimationInvalidOptions": "Die Schätzungseinstellungen fehlen oder sind ungültig"
+    "estimationInvalidOptions": "Die Schätzungseinstellungen fehlen oder sind ungültig",
+    "missingDocumentFile": "Bitte wählen Sie eine gültige Dokumentdatei (.pdf, .docx, .doc, .txt)",
+    "noQuestionsExtracted": "Aus dem Dokument konnten keine Fragen extrahiert werden.",
+    "failedToParseDocument": "Fehler beim Extrahieren der Fragen aus dem Dokument"
   },
   "result": {
     "notFound": "Ergebnis nicht gefunden"

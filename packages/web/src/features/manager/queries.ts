@@ -1,6 +1,6 @@
 import type { GameSettings } from "@razzia/common/types/game"
 import type { QuizzValidated } from "@razzia/common/validators/quizz"
-import { api, unwrap, unwrapEmpty } from "@razzia/web/lib/api"
+import { api, ApiError, authFetch, unwrap, unwrapEmpty } from "@razzia/web/lib/api"
 import { queryOptions } from "@tanstack/react-query"
 
 export const quizzKeys = {
@@ -39,6 +39,32 @@ export const resultQuery = (id: string) =>
 
 export const createQuizz = (json: QuizzValidated) =>
   unwrap(api.quizz.$post({ json }))
+
+export const importQuizzDocument = async (file: File) => {
+  const form = new FormData()
+  form.append("file", file)
+
+  const response = await authFetch("/api/quizz/import-document", {
+    method: "POST",
+    body: form,
+  })
+
+  if (!response.ok) {
+    const errorBody = ((await response.json().catch(() => ({}))) || {}) as {
+      error?: string
+    }
+    throw new ApiError(
+      response.status,
+      errorBody.error || "errors:quizz.failedToParseDocument",
+    )
+  }
+
+  return (await response.json()) as {
+    id: string
+    quizz: QuizzValidated
+    totalQuestions: number
+  }
+}
 
 export const updateQuizz = ({
   id,

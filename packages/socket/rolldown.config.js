@@ -13,5 +13,6 @@ export default defineConfig({
     format: "cjs",
     minify: true,
     sourcemap: true,
+    codeSplitting: false,
   },
 })

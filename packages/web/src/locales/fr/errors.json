@@ -60,7 +60,10 @@
     "estimationSolutionOutOfRange": "La bonne réponse doit être comprise entre le minimum et le maximum",
     "estimationStepInvalid": "Le pas doit être supérieur à 0",
     "estimationMarginNegative": "La marge ne peut pas être négative",
-    "estimationInvalidOptions": "Les réglages de l'estimation sont manquants ou invalides"
+    "estimationInvalidOptions": "Les réglages de l'estimation sont manquants ou invalides",
+    "missingDocumentFile": "Veuillez sélectionner un fichier document valide (.pdf, .docx, .doc, .txt)",
+    "noQuestionsExtracted": "Aucune question n'a pu être extraite du document.",
+    "failedToParseDocument": "Échec de l'extraction des questions du document"
   },
   "result": {
     "notFound": "Résultat introuvable"

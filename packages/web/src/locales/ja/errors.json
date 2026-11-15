@@ -60,7 +60,10 @@
     "estimationSolutionOutOfRange": "正解は最小値と最大値の間である必要があります",
     "estimationStepInvalid": "刻み幅は 0 より大きくする必要があります",
     "estimationMarginNegative": "許容範囲は負の値にできません",
-    "estimationInvalidOptions": "数値推定の設定がないか、無効です"
+    "estimationInvalidOptions": "数値推定の設定がないか、無効です",
+    "missingDocumentFile": "有効なドキュメントファイル（.pdf, .docx, .doc, .txt）を選択してください",
+    "noQuestionsExtracted": "ドキュメントから質問を抽出できませんでした。",
+    "failedToParseDocument": "ドキュメントの質問抽出に失敗しました"
   },
   "result": {
     "notFound": "結果が見つかりません"

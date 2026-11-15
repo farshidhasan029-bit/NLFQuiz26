@@ -235,6 +235,81 @@ describe("manager routes", () => {
     expect(response.status).toBe(StatusCodes.BAD_REQUEST)
     expect(await json(response)).toEqual({ error: "errors:quizz.noQuestions" })
   })
+
+  it("imports a quiz from an uploaded text/doc file", async () => {
+    const fileContent = `
+1. What is the capital of France?
+A. Berlin
+*B. Paris
+C. Rome
+D. Madrid
+
+2. Which planet is closest to the Sun?
+A. Venus
+*B. Mercury
+C. Mars
+`
+    const file = new File([fileContent], "geography-quiz.txt", {
+      type: "text/plain",
+    })
+    const form = new FormData()
+    form.append("file", file)
+
+    const response = await app.request("/api/quizz/import-document", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${managerToken}` },
+      body: form,
+    })
+
+    expect(response.status).toBe(StatusCodes.CREATED)
+    const data = await json<{
+      id: string
+      totalQuestions: number
+      quizz: any
+    }>(response)
+    expect(data.totalQuestions).toBe(2)
+    expect(data.quizz.subject).toBe("geography quiz")
+    expect(data.quizz.questions[0].question).toBe(
+      "What is the capital of France?",
+    )
+    expect(data.quizz.questions[0].answers).toEqual([
+      "Berlin",
+      "Paris",
+      "Rome",
+      "Madrid",
+    ])
+    expect(data.quizz.questions[0].solutions).toEqual([1])
+  })
+
+  it("rejects document import if file is missing or invalid", async () => {
+    const form = new FormData()
+    const emptyResponse = await app.request("/api/quizz/import-document", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${managerToken}` },
+      body: form,
+    })
+    expect(emptyResponse.status).toBe(StatusCodes.BAD_REQUEST)
+    expect(await json(emptyResponse)).toEqual({
+      error: "errors:quizz.missingDocumentFile",
+    })
+
+    const noQuestionsFile = new File(
+      ["Just random text with no questions"],
+      "random.txt",
+      { type: "text/plain" },
+    )
+    const badForm = new FormData()
+    badForm.append("file", noQuestionsFile)
+    const badResponse = await app.request("/api/quizz/import-document", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${managerToken}` },
+      body: badForm,
+    })
+    expect(badResponse.status).toBe(StatusCodes.BAD_REQUEST)
+    expect(await json(badResponse)).toEqual({
+      error: "errors:quizz.noQuestionsExtracted",
+    })
+  })
 })
 
 describe("games", () => {

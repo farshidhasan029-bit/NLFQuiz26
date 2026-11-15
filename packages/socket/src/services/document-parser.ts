@@ -68,7 +68,8 @@ export const parseQuestionsFromText = (
   const questions: QuizzValidated["questions"] = []
   const questionRegex =
     /^(?:(?:Question|Q|Вопрос|Pregunta|Frage|প্রশ্ন)\s*[-.:#]?\s*\d+|\d+)\s*[-.):#]\s*(.+)$/i
-  const optionRegex = /^(?:[([{]?[A-Ha-h][)\]}:.-]|\([A-Ha-h]\))\s*(.+)$/
+  const optionRegex =
+    /^[*✓]?\s*(?:[([{]?[A-Ha-h][)\]}:.-]|\([A-Ha-h]\))\s*(.+)$/
   const answerLineRegex =
     /^(?:Correct\s*)?Ans(?:wer)?\s*[:=-]\s*([A-Ha-h]|\d+|.+)$/i
 
@@ -156,8 +157,14 @@ function addOption(
   },
   rawLine: string,
 ) {
-  let text = rawLine.replace(/^[([{]?[A-Ha-h][)\]}:.-]\s*/, "").trim()
   let isCorrect = false
+  let trimmed = rawLine.trim()
+  if (trimmed.startsWith("*") || trimmed.startsWith("✓")) {
+    isCorrect = true
+    trimmed = trimmed.replace(/^[*✓]\s*/, "")
+  }
+
+  let text = trimmed.replace(/^[([{]?[A-Ha-h][)\]}:.-]\s*/, "").trim()
 
   if (
     text.includes("*") ||

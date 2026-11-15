@@ -14,7 +14,7 @@ export class ApiError extends Error {
   }
 }
 
-const authFetch: typeof fetch = async (input, init) => {
+export const authFetch: typeof fetch = async (input, init) => {
   const { token } = await ensureSession()
   const headers = new Headers(init?.headers)
 

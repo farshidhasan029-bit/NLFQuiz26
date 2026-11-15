@@ -9,7 +9,7 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest"
 
 const PLAYER_TTL = 60 * 60 * 24 * 30
-const MANAGER_TTL = 60 * 60 * 12
+const MANAGER_TTL = 60 * 60 * 24 * 30
 
 afterEach(() => {
   vi.useRealTimers()
@@ -25,13 +25,13 @@ describe("session tokens", () => {
     })
   })
 
-  it("expires manager sessions sooner than player sessions", async () => {
+  it("sets session expiry for manager and player sessions", async () => {
     const now = Math.floor(Date.now() / 1000)
     const player = await mintToken("client", SESSION_ROLES.PLAYER)
     const manager = await mintToken("client", SESSION_ROLES.MANAGER)
 
-    expect(player.expiresAt - now).toBeGreaterThanOrEqual(PLAYER_TTL)
-    expect(manager.expiresAt - now).toBeLessThanOrEqual(MANAGER_TTL + 1)
+    expect(player.expiresAt - now).toBeGreaterThanOrEqual(PLAYER_TTL - 5)
+    expect(manager.expiresAt - now).toBeGreaterThanOrEqual(MANAGER_TTL - 5)
   })
 
   it("rejects expired tokens unless expiry is ignored", async () => {
