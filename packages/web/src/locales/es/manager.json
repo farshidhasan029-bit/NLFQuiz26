@@ -17,6 +17,14 @@
     "edit": "Editar cuestionario"
   },
   "result": {
+    "winner": "Ganador",
+    "overallEvaluation": "Evaluación general",
+    "questionBreakdown": "Desglose por preguntas",
+    "position": "Posición",
+    "marks": "Puntos / Puntuación",
+    "accuracy": "Precisión",
+    "averageScore": "Puntuación media",
+    "highestScore": "Puntuación más alta",
     "delete": "Eliminar resultado",
     "deleteConfirm": "¿Eliminar el resultado de \"{{name}}\"? Esta acción no se puede deshacer.",
     "deleted": "Resultado eliminado",

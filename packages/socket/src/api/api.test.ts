@@ -120,7 +120,7 @@ describe("auth", () => {
 
     const { token } = await mintToken("client", SESSION_ROLES.MANAGER)
 
-    vi.advanceTimersByTime(13 * 60 * 60 * 1000)
+    vi.advanceTimersByTime(31 * 24 * 60 * 60 * 1000)
 
     const renewed = await json<SessionResponse>(
       await request("/auth/session", { method: "POST", body: { token } }),

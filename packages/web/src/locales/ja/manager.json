@@ -17,6 +17,14 @@
     "edit": "クイズを編集"
   },
   "result": {
+    "winner": "勝者",
+    "overallEvaluation": "全体評価",
+    "questionBreakdown": "質問ごとの内訳",
+    "position": "順位",
+    "marks": "得点 / スコア",
+    "accuracy": "正解率",
+    "averageScore": "平均スコア",
+    "highestScore": "最高スコア",
     "delete": "結果を削除",
     "deleteConfirm": "「{{name}}」の結果を削除しますか？この操作は元に戻せません。",
     "deleted": "結果を削除しました",

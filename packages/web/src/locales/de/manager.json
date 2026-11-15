@@ -17,6 +17,14 @@
     "edit": "Quiz bearbeiten"
   },
   "result": {
+    "winner": "Gewinner",
+    "overallEvaluation": "Gesamtbewertung",
+    "questionBreakdown": "Fragenaufschlüsselung",
+    "position": "Rang",
+    "marks": "Punkte / Punktzahl",
+    "accuracy": "Genauigkeit",
+    "averageScore": "Durchschnittspunktzahl",
+    "highestScore": "Höchste Punktzahl",
     "delete": "Ergebnis löschen",
     "deleteConfirm": "Ergebnis für \"{{name}}\" löschen? Dies kann nicht rückgängig gemacht werden.",
     "deleted": "Ergebnis gelöscht",

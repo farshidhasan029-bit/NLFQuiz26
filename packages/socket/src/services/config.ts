@@ -226,12 +226,21 @@ export const getResultsMeta = (): GameResultMeta[] => {
     }
 
     try {
+      const sortedPlayers = data.players
+        ? [...data.players].sort(
+            (a, b) => (a.rank ?? 999) - (b.rank ?? 999) || (b.points ?? 0) - (a.points ?? 0),
+          )
+        : []
+      const topPlayer = sortedPlayers[0]
+
       return {
         id: data.id,
         gameMode: data.gameMode ?? QUIZZ_MODES.QUIZ,
         subject: data.subject,
         date: data.date,
         playerCount: data.players.length,
+        winnerName: topPlayer?.username,
+        topScore: topPlayer?.points,
       }
     } catch {
       return null

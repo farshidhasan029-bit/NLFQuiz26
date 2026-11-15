@@ -9,7 +9,7 @@ import {
 } from "@razzia/web/features/manager/queries"
 import { ApiError } from "@razzia/web/lib/api"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Trash2 } from "lucide-react"
+import { Trash2, Trophy } from "lucide-react"
 import { useState } from "react"
 import toast from "react-hot-toast"
 import { useTranslation } from "react-i18next"
@@ -66,16 +66,27 @@ const ConfigResults = () => {
         {results.map((r) => (
           <div
             key={r.id}
-            className="border-accent flex h-14 w-full items-center justify-between rounded-md border-2 p-3"
+            className="border-accent flex min-h-16 w-full items-center justify-between rounded-md border-2 p-3 gap-2"
           >
             <button
               className="min-w-0 flex-1 text-left"
               onClick={() => setSelectedId(r.id)}
             >
-              <p className="text-foreground truncate font-medium">
-                {r.subject}
-              </p>
-              <p className="text-muted-foreground text-xs">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="text-foreground truncate font-medium">
+                  {r.subject}
+                </p>
+                {r.winnerName && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-300">
+                    <Trophy className="size-3 shrink-0" />
+                    <span>{r.winnerName}</span>
+                    {typeof r.topScore === "number" && (
+                      <span className="opacity-80">({r.topScore} pts)</span>
+                    )}
+                  </span>
+                )}
+              </div>
+              <p className="text-muted-foreground text-xs mt-0.5">
                 {formatDate(r.date)} -{" "}
                 {t("manager:result.playerCount", { count: r.playerCount })}
               </p>

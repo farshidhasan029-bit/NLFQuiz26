@@ -17,6 +17,14 @@
     "edit": "Sửa trò chơi"
   },
   "result": {
+    "winner": "Người chiến thắng",
+    "overallEvaluation": "Đánh giá tổng thể",
+    "questionBreakdown": "Chi tiết theo câu hỏi",
+    "position": "Thứ hạng",
+    "marks": "Điểm số",
+    "accuracy": "Độ chính xác",
+    "averageScore": "Điểm trung bình",
+    "highestScore": "Điểm cao nhất",
     "delete": "Xóa kết quả",
     "deleteConfirm": "Xóa kết quả của \"{{name}}\"? Kết quả này sẽ bị xóa vĩnh viễn.",
     "deleted": "Đã xóa kết quả",

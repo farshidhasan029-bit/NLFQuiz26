@@ -17,6 +17,14 @@
     "edit": "Modifier le quizz"
   },
   "result": {
+    "winner": "Gagnant",
+    "overallEvaluation": "Évaluation globale",
+    "questionBreakdown": "Détail par question",
+    "position": "Classement",
+    "marks": "Points / Score",
+    "accuracy": "Précision",
+    "averageScore": "Score moyen",
+    "highestScore": "Meilleur score",
     "delete": "Supprimer le résultat",
     "deleteConfirm": "Supprimer le résultat \"{{name}}\" ? Cette action est irréversible.",
     "deleted": "Résultat supprimé",

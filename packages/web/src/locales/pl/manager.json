@@ -17,6 +17,14 @@
     "edit": "Edytuj quiz"
   },
   "result": {
+    "winner": "Zwycięzca",
+    "overallEvaluation": "Ocena ogólna",
+    "questionBreakdown": "Podział na pytania",
+    "position": "Miejsce",
+    "marks": "Punkty / Wynik",
+    "accuracy": "Dokładność",
+    "averageScore": "Średni wynik",
+    "highestScore": "Najwyższy wynik",
     "delete": "Usuń wynik",
     "deleteConfirm": "Usunąć wynik dla „{{name}}”? Tej operacji nie można cofnąć.",
     "deleted": "Wynik został usunięty",

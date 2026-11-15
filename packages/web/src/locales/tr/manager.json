@@ -17,6 +17,14 @@
     "edit": "Testi düzenle"
   },
   "result": {
+    "winner": "Kazanan",
+    "overallEvaluation": "Genel Değerlendirme",
+    "questionBreakdown": "Soru Dökümü",
+    "position": "Sıralama",
+    "marks": "Puan / Skor",
+    "accuracy": "Doğruluk",
+    "averageScore": "Ortalama Puan",
+    "highestScore": "En Yüksek Puan",
     "delete": "Sonucu sil",
     "deleteConfirm": "\"{{name}}\" için sonuç silinsin mi? Bu işlem geri alınamaz.",
     "deleted": "Sonuç silindi",

@@ -17,6 +17,14 @@
     "edit": "কুইজ সম্পাদনা করুন"
   },
   "result": {
+    "winner": "বিজয়ী",
+    "overallEvaluation": "সামগ্রিক মূল্যায়ন",
+    "questionBreakdown": "প্রশ্ন বিশ্লেষণ",
+    "position": "অবস্থান",
+    "marks": "নম্বর / স্কোর",
+    "accuracy": "সঠিকতা",
+    "averageScore": "গড় স্কোর",
+    "highestScore": "সর্বোচ্চ স্কোর",
     "delete": "ফলাফল মুছুন",
     "deleteConfirm": "\"{{name}}\"-এর ফলাফল মুছবেন? এটি পুনরায় ফিরিয়ে আনা যাবে না।",
     "deleted": "ফলাফল মুছে ফেলা হয়েছে",

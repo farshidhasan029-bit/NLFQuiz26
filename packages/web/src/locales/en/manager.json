@@ -17,6 +17,14 @@
     "edit": "Edit quizz"
   },
   "result": {
+    "winner": "Winner",
+    "overallEvaluation": "Overall Evaluation",
+    "questionBreakdown": "Question Breakdown",
+    "position": "Rank",
+    "marks": "Marks / Score",
+    "accuracy": "Accuracy",
+    "averageScore": "Average Score",
+    "highestScore": "Highest Score",
     "delete": "Delete result",
     "deleteConfirm": "Delete result for \"{{name}}\"? This cannot be undone.",
     "deleted": "Result deleted",

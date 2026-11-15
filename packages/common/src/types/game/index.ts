@@ -154,4 +154,6 @@ export interface GameResultMeta {
   subject: string
   date: string
   playerCount: number
+  winnerName?: string
+  topScore?: number
 }
