@@ -109,14 +109,16 @@ describe("joining a game", () => {
     expect(game.join(createSocket("a"), "Alice")).toBe("errors:game.locked")
   })
 
-  it("refuses the same client twice", () => {
-    const { game, createSocket } = setup(createQuizz([createQuestion()]), [
+  it("re-join from the same clientId is treated as a reconnect (not an error)", () => {
+    const { game, createSocket, lastEvent } = setup(createQuizz([createQuestion()]), [
       "Alice",
     ])
 
-    expect(game.join(createSocket("other-socket", "alice"), "Alice")).toBe(
-      "errors:game.playerAlreadyConnected",
-    )
+    // Same clientId "alice" but a new socket — should silently reconnect
+    const newSocket = createSocket("other-socket", "alice")
+    expect(game.join(newSocket, "Alice")).toBeNull()
+    // The player should receive SUCCESS_RECONNECT (not a join error)
+    expect(lastEvent(newSocket.id, EVENTS.PLAYER.SUCCESS_RECONNECT)).toBeTruthy()
   })
 
   it("notifies the manager and the players", () => {

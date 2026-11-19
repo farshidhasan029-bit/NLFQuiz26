@@ -212,6 +212,13 @@ class Game {
       return "errors:game.expelledForCheating"
     }
 
+    // If this clientId is already a player in this game (re-join from same device),
+    // treat it as a reconnect rather than a new join so the host sees them correctly.
+    if (clientId && this.playerManager.findByClientId(clientId)) {
+      this.reconnectPlayer(socket)
+      return null
+    }
+
     if (this._locked) {
       return "errors:game.locked"
     }
@@ -675,6 +682,14 @@ class Game {
 
       for (const player of away) {
         this.removePlayer(player.id)
+      }
+
+      // Auto-lock when game starts so no new participants can join mid-game.
+      // Self-paced quizzes are excluded — they're designed to allow late joiners.
+      // The host can manually unlock via the lock button if they want to allow late joins.
+      if (!this._locked && !this._settings.selfPaced) {
+        this._locked = true
+        this.io.to(this._manager.id).emit(EVENTS.MANAGER.LOCK_UPDATED, true)
       }
     }
 
