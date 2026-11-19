@@ -58,6 +58,23 @@
   "tabs": {
     "play": "Play",
     "quizz": "Quizz",
-    "results": "Results"
+    "results": "Results",
+    "backup": "Backup"
+  },
+  "backup": {
+    "warningTitle": "Data is stored on the server",
+    "warningBody": "On Render's free plan the server resets periodically, wiping all quizzes and results. Export a backup regularly, or upgrade to a paid plan with a persistent disk.",
+    "exportTitle": "Export Backup",
+    "exportDesc": "Download all your quizzes and results as a single JSON file.",
+    "exportBtn": "Download Backup",
+    "exporting": "Exporting…",
+    "exportSuccess": "Backup downloaded!",
+    "exportError": "Export failed — please try again.",
+    "restoreTitle": "Restore from Backup",
+    "restoreDesc": "Upload a backup JSON file to restore your quizzes and results (existing data is kept, only new items are added).",
+    "restoreBtn": "Upload Backup File",
+    "restoring": "Restoring…",
+    "restoreSuccess": "Restored {{quizzCount}} quiz(zes) and {{resultCount}} result(s).",
+    "invalidFile": "Invalid backup file — please select a valid NLFQuiz backup JSON."
   }
 }

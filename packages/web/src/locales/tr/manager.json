@@ -58,6 +58,23 @@
   "tabs": {
     "play": "Oyna",
     "quizz": "Test",
-    "results": "Sonuçlar"
+    "results": "Sonuçlar",
+    "backup": "Yedek"
+  },
+  "backup": {
+    "warningTitle": "Veriler sunucuda saklanır",
+    "warningBody": "Render'ın ücretsiz planında sunucu periyodik olarak sıfırlanır ve tüm sınavlar ile sonuçlar silinir. Düzenli olarak yedek alın veya ücretli plana geçin.",
+    "exportTitle": "Yedek Dışa Aktar",
+    "exportDesc": "Tüm sınavlarınızı ve sonuçlarınızı JSON dosyası olarak indirin.",
+    "exportBtn": "Yedeği İndir",
+    "exporting": "Dışa aktarılıyor…",
+    "exportSuccess": "Yedek indirildi!",
+    "exportError": "Dışa aktarma başarısız — lütfen tekrar deneyin.",
+    "restoreTitle": "Yedekten Geri Yükle",
+    "restoreDesc": "Sınavlarınızı ve sonuçlarınızı geri yüklemek için bir yedek JSON dosyası yükleyin.",
+    "restoreBtn": "Yedek Dosyası Yükle",
+    "restoring": "Geri yükleniyor…",
+    "restoreSuccess": "{{quizzCount}} sınav ve {{resultCount}} sonuç geri yüklendi.",
+    "invalidFile": "Geçersiz yedek dosyası."
   }
 }

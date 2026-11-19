@@ -1,0 +1,216 @@
+#!/usr/bin/env node
+// Adds backup locale keys to all manager.json locale files
+
+const fs = require("fs")
+const path = require("path")
+
+const localesDir = path.join(__dirname, "../../packages/web/src/locales")
+
+// Translations for each locale
+const backupKeys = {
+  en: {
+    tabs: { backup: "Backup" },
+    backup: {
+      warningTitle: "Data is stored on the server",
+      warningBody: "On Render's free plan the server resets periodically, wiping all quizzes and results. Export a backup regularly, or upgrade to a paid plan with a persistent disk.",
+      exportTitle: "Export Backup",
+      exportDesc: "Download all your quizzes and results as a single JSON file.",
+      exportBtn: "Download Backup",
+      exporting: "Exporting…",
+      exportSuccess: "Backup downloaded!",
+      exportError: "Export failed — please try again.",
+      restoreTitle: "Restore from Backup",
+      restoreDesc: "Upload a backup JSON file to restore your quizzes and results (existing data is kept, only new items are added).",
+      restoreBtn: "Upload Backup File",
+      restoring: "Restoring…",
+      restoreSuccess: "Restored {{quizzCount}} quiz(zes) and {{resultCount}} result(s).",
+      invalidFile: "Invalid backup file — please select a valid NLFQuiz backup JSON.",
+    },
+  },
+  bn: {
+    tabs: { backup: "ব্যাকআপ" },
+    backup: {
+      warningTitle: "ডেটা সার্ভারে সংরক্ষিত",
+      warningBody: "Render-এর ফ্রি প্ল্যানে সার্ভার পর্যায়ক্রমে রিসেট হয়, সমস্ত কুইজ এবং ফলাফল মুছে দেয়। নিয়মিত ব্যাকআপ এক্সপোর্ট করুন অথবা পেইড প্ল্যানে আপগ্রেড করুন।",
+      exportTitle: "ব্যাকআপ এক্সপোর্ট",
+      exportDesc: "আপনার সমস্ত কুইজ এবং ফলাফল একটি JSON ফাইলে ডাউনলোড করুন।",
+      exportBtn: "ব্যাকআপ ডাউনলোড করুন",
+      exporting: "এক্সপোর্ট হচ্ছে…",
+      exportSuccess: "ব্যাকআপ ডাউনলোড হয়েছে!",
+      exportError: "এক্সপোর্ট ব্যর্থ হয়েছে — আবার চেষ্টা করুন।",
+      restoreTitle: "ব্যাকআপ থেকে পুনরুদ্ধার",
+      restoreDesc: "আপনার কুইজ এবং ফলাফল পুনরুদ্ধার করতে একটি ব্যাকআপ JSON ফাইল আপলোড করুন।",
+      restoreBtn: "ব্যাকআপ ফাইল আপলোড করুন",
+      restoring: "পুনরুদ্ধার হচ্ছে…",
+      restoreSuccess: "{{quizzCount}}টি কুইজ এবং {{resultCount}}টি ফলাফল পুনরুদ্ধার হয়েছে।",
+      invalidFile: "অবৈধ ব্যাকআপ ফাইল।",
+    },
+  },
+  de: {
+    tabs: { backup: "Backup" },
+    backup: {
+      warningTitle: "Daten werden auf dem Server gespeichert",
+      warningBody: "Im kostenlosen Render-Plan wird der Server regelmäßig zurückgesetzt, wobei alle Quiz und Ergebnisse gelöscht werden. Exportieren Sie regelmäßig ein Backup oder upgraden Sie auf einen kostenpflichtigen Plan.",
+      exportTitle: "Backup exportieren",
+      exportDesc: "Laden Sie alle Ihre Quiz und Ergebnisse als JSON-Datei herunter.",
+      exportBtn: "Backup herunterladen",
+      exporting: "Exportiere…",
+      exportSuccess: "Backup heruntergeladen!",
+      exportError: "Export fehlgeschlagen — bitte erneut versuchen.",
+      restoreTitle: "Aus Backup wiederherstellen",
+      restoreDesc: "Laden Sie eine Backup-JSON-Datei hoch, um Ihre Quiz und Ergebnisse wiederherzustellen.",
+      restoreBtn: "Backup-Datei hochladen",
+      restoring: "Wiederherstelle…",
+      restoreSuccess: "{{quizzCount}} Quiz und {{resultCount}} Ergebnis(se) wiederhergestellt.",
+      invalidFile: "Ungültige Backup-Datei.",
+    },
+  },
+  es: {
+    tabs: { backup: "Copia de seguridad" },
+    backup: {
+      warningTitle: "Los datos se almacenan en el servidor",
+      warningBody: "En el plan gratuito de Render, el servidor se reinicia periódicamente, borrando todos los cuestionarios y resultados. Exporte una copia de seguridad regularmente o actualice a un plan de pago.",
+      exportTitle: "Exportar copia de seguridad",
+      exportDesc: "Descargue todos sus cuestionarios y resultados como un archivo JSON.",
+      exportBtn: "Descargar copia de seguridad",
+      exporting: "Exportando…",
+      exportSuccess: "¡Copia de seguridad descargada!",
+      exportError: "Error al exportar — inténtelo de nuevo.",
+      restoreTitle: "Restaurar desde copia de seguridad",
+      restoreDesc: "Suba un archivo JSON de copia de seguridad para restaurar sus cuestionarios y resultados.",
+      restoreBtn: "Subir archivo de copia de seguridad",
+      restoring: "Restaurando…",
+      restoreSuccess: "Se restauraron {{quizzCount}} cuestionario(s) y {{resultCount}} resultado(s).",
+      invalidFile: "Archivo de copia de seguridad no válido.",
+    },
+  },
+  fr: {
+    tabs: { backup: "Sauvegarde" },
+    backup: {
+      warningTitle: "Les données sont stockées sur le serveur",
+      warningBody: "Sur le plan gratuit de Render, le serveur se réinitialise périodiquement, effaçant tous les quiz et résultats. Exportez régulièrement une sauvegarde ou passez à un plan payant.",
+      exportTitle: "Exporter la sauvegarde",
+      exportDesc: "Téléchargez tous vos quiz et résultats dans un fichier JSON.",
+      exportBtn: "Télécharger la sauvegarde",
+      exporting: "Export en cours…",
+      exportSuccess: "Sauvegarde téléchargée !",
+      exportError: "Échec de l'export — veuillez réessayer.",
+      restoreTitle: "Restaurer depuis une sauvegarde",
+      restoreDesc: "Téléversez un fichier JSON de sauvegarde pour restaurer vos quiz et résultats.",
+      restoreBtn: "Téléverser le fichier de sauvegarde",
+      restoring: "Restauration…",
+      restoreSuccess: "{{quizzCount}} quiz et {{resultCount}} résultat(s) restaurés.",
+      invalidFile: "Fichier de sauvegarde invalide.",
+    },
+  },
+  it: {
+    tabs: { backup: "Backup" },
+    backup: {
+      warningTitle: "I dati sono archiviati sul server",
+      warningBody: "Nel piano gratuito di Render, il server si ripristina periodicamente, cancellando tutti i quiz e i risultati. Esporta regolarmente un backup o passa a un piano a pagamento.",
+      exportTitle: "Esporta backup",
+      exportDesc: "Scarica tutti i tuoi quiz e risultati come file JSON.",
+      exportBtn: "Scarica backup",
+      exporting: "Esportazione…",
+      exportSuccess: "Backup scaricato!",
+      exportError: "Esportazione fallita — riprova.",
+      restoreTitle: "Ripristina da backup",
+      restoreDesc: "Carica un file JSON di backup per ripristinare i tuoi quiz e risultati.",
+      restoreBtn: "Carica file di backup",
+      restoring: "Ripristino…",
+      restoreSuccess: "Ripristinati {{quizzCount}} quiz e {{resultCount}} risultato/i.",
+      invalidFile: "File di backup non valido.",
+    },
+  },
+  ja: {
+    tabs: { backup: "バックアップ" },
+    backup: {
+      warningTitle: "データはサーバーに保存されます",
+      warningBody: "Renderの無料プランでは、サーバーが定期的にリセットされ、すべてのクイズと結果が消去されます。定期的にバックアップをエクスポートするか、有料プランにアップグレードしてください。",
+      exportTitle: "バックアップをエクスポート",
+      exportDesc: "すべてのクイズと結果をJSONファイルとしてダウンロードします。",
+      exportBtn: "バックアップをダウンロード",
+      exporting: "エクスポート中…",
+      exportSuccess: "バックアップがダウンロードされました！",
+      exportError: "エクスポートに失敗しました。もう一度お試しください。",
+      restoreTitle: "バックアップから復元",
+      restoreDesc: "バックアップJSONファイルをアップロードして、クイズと結果を復元します。",
+      restoreBtn: "バックアップファイルをアップロード",
+      restoring: "復元中…",
+      restoreSuccess: "{{quizzCount}}件のクイズと{{resultCount}}件の結果を復元しました。",
+      invalidFile: "無効なバックアップファイルです。",
+    },
+  },
+  pl: {
+    tabs: { backup: "Kopia zapasowa" },
+    backup: {
+      warningTitle: "Dane są przechowywane na serwerze",
+      warningBody: "W darmowym planie Render serwer jest okresowo resetowany, usuwając wszystkie quizy i wyniki. Regularnie eksportuj kopię zapasową lub przejdź na płatny plan.",
+      exportTitle: "Eksportuj kopię zapasową",
+      exportDesc: "Pobierz wszystkie quizy i wyniki jako plik JSON.",
+      exportBtn: "Pobierz kopię zapasową",
+      exporting: "Eksportowanie…",
+      exportSuccess: "Kopia zapasowa pobrana!",
+      exportError: "Eksport nie powiódł się — spróbuj ponownie.",
+      restoreTitle: "Przywróć z kopii zapasowej",
+      restoreDesc: "Prześlij plik JSON kopii zapasowej, aby przywrócić quizy i wyniki.",
+      restoreBtn: "Prześlij plik kopii zapasowej",
+      restoring: "Przywracanie…",
+      restoreSuccess: "Przywrócono {{quizzCount}} quiz(ów) i {{resultCount}} wynik(ów).",
+      invalidFile: "Nieprawidłowy plik kopii zapasowej.",
+    },
+  },
+  tr: {
+    tabs: { backup: "Yedek" },
+    backup: {
+      warningTitle: "Veriler sunucuda saklanır",
+      warningBody: "Render'ın ücretsiz planında sunucu periyodik olarak sıfırlanır ve tüm sınavlar ile sonuçlar silinir. Düzenli olarak yedek alın veya ücretli plana geçin.",
+      exportTitle: "Yedek Dışa Aktar",
+      exportDesc: "Tüm sınavlarınızı ve sonuçlarınızı JSON dosyası olarak indirin.",
+      exportBtn: "Yedeği İndir",
+      exporting: "Dışa aktarılıyor…",
+      exportSuccess: "Yedek indirildi!",
+      exportError: "Dışa aktarma başarısız — lütfen tekrar deneyin.",
+      restoreTitle: "Yedekten Geri Yükle",
+      restoreDesc: "Sınavlarınızı ve sonuçlarınızı geri yüklemek için bir yedek JSON dosyası yükleyin.",
+      restoreBtn: "Yedek Dosyası Yükle",
+      restoring: "Geri yükleniyor…",
+      restoreSuccess: "{{quizzCount}} sınav ve {{resultCount}} sonuç geri yüklendi.",
+      invalidFile: "Geçersiz yedek dosyası.",
+    },
+  },
+  vi: {
+    tabs: { backup: "Sao lưu" },
+    backup: {
+      warningTitle: "Dữ liệu được lưu trên máy chủ",
+      warningBody: "Với gói miễn phí của Render, máy chủ được đặt lại định kỳ, xóa tất cả các bài kiểm tra và kết quả. Thường xuyên xuất bản sao lưu hoặc nâng cấp lên gói trả phí.",
+      exportTitle: "Xuất bản sao lưu",
+      exportDesc: "Tải xuống tất cả các bài kiểm tra và kết quả của bạn dưới dạng file JSON.",
+      exportBtn: "Tải xuống bản sao lưu",
+      exporting: "Đang xuất…",
+      exportSuccess: "Đã tải xuống bản sao lưu!",
+      exportError: "Xuất thất bại — vui lòng thử lại.",
+      restoreTitle: "Khôi phục từ bản sao lưu",
+      restoreDesc: "Tải lên file JSON sao lưu để khôi phục các bài kiểm tra và kết quả của bạn.",
+      restoreBtn: "Tải lên file sao lưu",
+      restoring: "Đang khôi phục…",
+      restoreSuccess: "Đã khôi phục {{quizzCount}} bài kiểm tra và {{resultCount}} kết quả.",
+      invalidFile: "File sao lưu không hợp lệ.",
+    },
+  },
+}
+
+for (const [locale, keys] of Object.entries(backupKeys)) {
+  const filePath = path.join(localesDir, locale, "manager.json")
+  const data = JSON.parse(fs.readFileSync(filePath, "utf-8"))
+
+  // Merge tabs.backup
+  data.tabs = { ...data.tabs, ...keys.tabs }
+  // Add backup section
+  data.backup = keys.backup
+
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + "\n")
+  console.log(`Updated ${locale}/manager.json`)
+}
+
+console.log("Done!")

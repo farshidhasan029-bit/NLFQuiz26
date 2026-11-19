@@ -276,6 +276,88 @@ export const deleteResult = (id: string): void => {
   fs.unlinkSync(join(getPath("results"), file))
 }
 
+export const getResults = (): GameResult[] => {
+  const resultsPath = getPath("results")
+
+  if (!fs.existsSync(resultsPath)) {
+    return []
+  }
+
+  try {
+    return listJsonFiles(resultsPath)
+      .map((file) => {
+        const data = readJson(join(resultsPath, file)) as StoredResult | null
+        if (!data) return null
+        return { ...data, gameMode: data.gameMode ?? QUIZZ_MODES.QUIZ } as GameResult
+      })
+      .filter((r): r is GameResult => r !== null)
+  } catch {
+    return []
+  }
+}
+
+export interface BackupBundle {
+  version: 1
+  exportedAt: string
+  quizz: QuizzWithId[]
+  results: GameResult[]
+}
+
+export const exportBackup = (): BackupBundle => ({
+  version: 1,
+  exportedAt: new Date().toISOString(),
+  quizz: getQuizz(),
+  results: getResults(),
+})
+
+export const restoreBackup = (bundle: BackupBundle): { quizzCount: number; resultCount: number } => {
+  // Ensure directories exist
+  initConfig()
+  const resultsPath = getPath("results")
+  if (!fs.existsSync(resultsPath)) {
+    fs.mkdirSync(resultsPath)
+  }
+
+  let quizzCount = 0
+  let resultCount = 0
+
+  for (const quizz of bundle.quizz ?? []) {
+    try {
+      const { id, ...rest } = quizz
+      const result = quizzValidator.safeParse(rest)
+      if (!result.success) continue
+      const fileName = normalizeFilename(result.data.subject, { fallback: "quizz" })
+      const filePath = getPath(`quizz/${fileName}.json`)
+      // Don't overwrite if same id already exists
+      const existing = findFileById("quizz", id)
+      if (!existing) {
+        fs.writeFileSync(filePath, JSON.stringify({ id, ...result.data }, null, 2))
+        quizzCount++
+      }
+    } catch {
+      /* skip invalid */
+    }
+  }
+
+  for (const result of bundle.results ?? []) {
+    try {
+      if (!result.id) continue
+      const existing = findFileById("results", result.id)
+      if (!existing) {
+        fs.writeFileSync(
+          join(resultsPath, `${result.id}.json`),
+          JSON.stringify(result, null, 2),
+        )
+        resultCount++
+      }
+    } catch {
+      /* skip invalid */
+    }
+  }
+
+  return { quizzCount, resultCount }
+}
+
 export const saveQuizz = (data: unknown): { id: string } => {
   const result = quizzValidator.safeParse(data)
 

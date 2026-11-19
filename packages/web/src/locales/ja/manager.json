@@ -58,6 +58,23 @@
   "tabs": {
     "play": "プレイ",
     "quizz": "クイズ",
-    "results": "結果"
+    "results": "結果",
+    "backup": "バックアップ"
+  },
+  "backup": {
+    "warningTitle": "データはサーバーに保存されます",
+    "warningBody": "Renderの無料プランでは、サーバーが定期的にリセットされ、すべてのクイズと結果が消去されます。定期的にバックアップをエクスポートするか、有料プランにアップグレードしてください。",
+    "exportTitle": "バックアップをエクスポート",
+    "exportDesc": "すべてのクイズと結果をJSONファイルとしてダウンロードします。",
+    "exportBtn": "バックアップをダウンロード",
+    "exporting": "エクスポート中…",
+    "exportSuccess": "バックアップがダウンロードされました！",
+    "exportError": "エクスポートに失敗しました。もう一度お試しください。",
+    "restoreTitle": "バックアップから復元",
+    "restoreDesc": "バックアップJSONファイルをアップロードして、クイズと結果を復元します。",
+    "restoreBtn": "バックアップファイルをアップロード",
+    "restoring": "復元中…",
+    "restoreSuccess": "{{quizzCount}}件のクイズと{{resultCount}}件の結果を復元しました。",
+    "invalidFile": "無効なバックアップファイルです。"
   }
 }

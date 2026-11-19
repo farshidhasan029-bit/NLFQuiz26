@@ -58,6 +58,23 @@
   "tabs": {
     "play": "Trò chơi",
     "quizz": "Cấu hình",
-    "results": "Kết quả"
+    "results": "Kết quả",
+    "backup": "Sao lưu"
+  },
+  "backup": {
+    "warningTitle": "Dữ liệu được lưu trên máy chủ",
+    "warningBody": "Với gói miễn phí của Render, máy chủ được đặt lại định kỳ, xóa tất cả các bài kiểm tra và kết quả. Thường xuyên xuất bản sao lưu hoặc nâng cấp lên gói trả phí.",
+    "exportTitle": "Xuất bản sao lưu",
+    "exportDesc": "Tải xuống tất cả các bài kiểm tra và kết quả của bạn dưới dạng file JSON.",
+    "exportBtn": "Tải xuống bản sao lưu",
+    "exporting": "Đang xuất…",
+    "exportSuccess": "Đã tải xuống bản sao lưu!",
+    "exportError": "Xuất thất bại — vui lòng thử lại.",
+    "restoreTitle": "Khôi phục từ bản sao lưu",
+    "restoreDesc": "Tải lên file JSON sao lưu để khôi phục các bài kiểm tra và kết quả của bạn.",
+    "restoreBtn": "Tải lên file sao lưu",
+    "restoring": "Đang khôi phục…",
+    "restoreSuccess": "Đã khôi phục {{quizzCount}} bài kiểm tra và {{resultCount}} kết quả.",
+    "invalidFile": "File sao lưu không hợp lệ."
   }
 }

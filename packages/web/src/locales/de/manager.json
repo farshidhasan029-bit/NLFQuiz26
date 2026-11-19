@@ -58,6 +58,23 @@
   "tabs": {
     "play": "Spielen",
     "quizz": "Quiz",
-    "results": "Ergebnisse"
+    "results": "Ergebnisse",
+    "backup": "Backup"
+  },
+  "backup": {
+    "warningTitle": "Daten werden auf dem Server gespeichert",
+    "warningBody": "Im kostenlosen Render-Plan wird der Server regelmäßig zurückgesetzt, wobei alle Quiz und Ergebnisse gelöscht werden. Exportieren Sie regelmäßig ein Backup oder upgraden Sie auf einen kostenpflichtigen Plan.",
+    "exportTitle": "Backup exportieren",
+    "exportDesc": "Laden Sie alle Ihre Quiz und Ergebnisse als JSON-Datei herunter.",
+    "exportBtn": "Backup herunterladen",
+    "exporting": "Exportiere…",
+    "exportSuccess": "Backup heruntergeladen!",
+    "exportError": "Export fehlgeschlagen — bitte erneut versuchen.",
+    "restoreTitle": "Aus Backup wiederherstellen",
+    "restoreDesc": "Laden Sie eine Backup-JSON-Datei hoch, um Ihre Quiz und Ergebnisse wiederherzustellen.",
+    "restoreBtn": "Backup-Datei hochladen",
+    "restoring": "Wiederherstelle…",
+    "restoreSuccess": "{{quizzCount}} Quiz und {{resultCount}} Ergebnis(se) wiederhergestellt.",
+    "invalidFile": "Ungültige Backup-Datei."
   }
 }

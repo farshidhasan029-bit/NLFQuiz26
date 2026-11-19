@@ -58,6 +58,23 @@
   "tabs": {
     "play": "Jouer",
     "quizz": "Quizz",
-    "results": "Résultats"
+    "results": "Résultats",
+    "backup": "Sauvegarde"
+  },
+  "backup": {
+    "warningTitle": "Les données sont stockées sur le serveur",
+    "warningBody": "Sur le plan gratuit de Render, le serveur se réinitialise périodiquement, effaçant tous les quiz et résultats. Exportez régulièrement une sauvegarde ou passez à un plan payant.",
+    "exportTitle": "Exporter la sauvegarde",
+    "exportDesc": "Téléchargez tous vos quiz et résultats dans un fichier JSON.",
+    "exportBtn": "Télécharger la sauvegarde",
+    "exporting": "Export en cours…",
+    "exportSuccess": "Sauvegarde téléchargée !",
+    "exportError": "Échec de l'export — veuillez réessayer.",
+    "restoreTitle": "Restaurer depuis une sauvegarde",
+    "restoreDesc": "Téléversez un fichier JSON de sauvegarde pour restaurer vos quiz et résultats.",
+    "restoreBtn": "Téléverser le fichier de sauvegarde",
+    "restoring": "Restauration…",
+    "restoreSuccess": "{{quizzCount}} quiz et {{resultCount}} résultat(s) restaurés.",
+    "invalidFile": "Fichier de sauvegarde invalide."
   }
 }

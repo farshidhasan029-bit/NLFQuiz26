@@ -58,6 +58,23 @@
   "tabs": {
     "play": "Jugar",
     "quizz": "Cuestionario",
-    "results": "Resultados"
+    "results": "Resultados",
+    "backup": "Copia de seguridad"
+  },
+  "backup": {
+    "warningTitle": "Los datos se almacenan en el servidor",
+    "warningBody": "En el plan gratuito de Render, el servidor se reinicia periódicamente, borrando todos los cuestionarios y resultados. Exporte una copia de seguridad regularmente o actualice a un plan de pago.",
+    "exportTitle": "Exportar copia de seguridad",
+    "exportDesc": "Descargue todos sus cuestionarios y resultados como un archivo JSON.",
+    "exportBtn": "Descargar copia de seguridad",
+    "exporting": "Exportando…",
+    "exportSuccess": "¡Copia de seguridad descargada!",
+    "exportError": "Error al exportar — inténtelo de nuevo.",
+    "restoreTitle": "Restaurar desde copia de seguridad",
+    "restoreDesc": "Suba un archivo JSON de copia de seguridad para restaurar sus cuestionarios y resultados.",
+    "restoreBtn": "Subir archivo de copia de seguridad",
+    "restoring": "Restaurando…",
+    "restoreSuccess": "Se restauraron {{quizzCount}} cuestionario(s) y {{resultCount}} resultado(s).",
+    "invalidFile": "Archivo de copia de seguridad no válido."
   }
 }

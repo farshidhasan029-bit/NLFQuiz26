@@ -95,3 +95,24 @@ export const managerLogin = (password: string) =>
   unwrap(api.auth.manager.$post({ json: { password } }))
 
 export const managerLogout = () => unwrap(api.auth.logout.$post())
+
+export const exportBackup = async (): Promise<Blob> => {
+  const response = await authFetch("/api/backup/export")
+  if (!response.ok) throw new Error("Backup export failed")
+  return response.blob()
+}
+
+export const restoreBackup = async (
+  bundle: unknown,
+): Promise<{ quizzCount: number; resultCount: number }> => {
+  const response = await authFetch("/api/backup/restore", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(bundle),
+  })
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as { error?: string }
+    throw new Error(body.error ?? "Restore failed")
+  }
+  return response.json() as Promise<{ quizzCount: number; resultCount: number }>
+}

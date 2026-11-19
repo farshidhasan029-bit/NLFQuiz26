@@ -61,6 +61,23 @@
   "tabs": {
     "play": "Graj",
     "quizz": "Quizy",
-    "results": "Wyniki"
+    "results": "Wyniki",
+    "backup": "Kopia zapasowa"
+  },
+  "backup": {
+    "warningTitle": "Dane są przechowywane na serwerze",
+    "warningBody": "W darmowym planie Render serwer jest okresowo resetowany, usuwając wszystkie quizy i wyniki. Regularnie eksportuj kopię zapasową lub przejdź na płatny plan.",
+    "exportTitle": "Eksportuj kopię zapasową",
+    "exportDesc": "Pobierz wszystkie quizy i wyniki jako plik JSON.",
+    "exportBtn": "Pobierz kopię zapasową",
+    "exporting": "Eksportowanie…",
+    "exportSuccess": "Kopia zapasowa pobrana!",
+    "exportError": "Eksport nie powiódł się — spróbuj ponownie.",
+    "restoreTitle": "Przywróć z kopii zapasowej",
+    "restoreDesc": "Prześlij plik JSON kopii zapasowej, aby przywrócić quizy i wyniki.",
+    "restoreBtn": "Prześlij plik kopii zapasowej",
+    "restoring": "Przywracanie…",
+    "restoreSuccess": "Przywrócono {{quizzCount}} quiz(ów) i {{resultCount}} wynik(ów).",
+    "invalidFile": "Nieprawidłowy plik kopii zapasowej."
   }
 }
