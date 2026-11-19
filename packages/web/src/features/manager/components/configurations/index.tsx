@@ -56,8 +56,8 @@ const Configurations = () => {
   })
 
   return (
-    <Card className="max-h-128 w-full max-w-md">
-      <div className="mb-4 flex items-center justify-between">
+    <Card className="max-h-128 w-full max-w-md flex flex-col overflow-hidden">
+      <div className="mb-4 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2 rounded-xl bg-primary/10 px-3 py-1.5 border border-primary/25 shadow-sm">
           <Settings className="size-4.5 text-primary" />
           <h1 className="text-base font-extrabold text-primary tracking-wide">
@@ -86,8 +86,8 @@ const Configurations = () => {
           </ConfigTabButton>
         ))}
       </div>
-      <hr className="text-muted my-4 border" />
-      <div className="flex min-h-0 flex-1 flex-col">
+      <hr className="text-muted my-4 border shrink-0" />
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         <TabComponent />
       </div>
     </Card>
