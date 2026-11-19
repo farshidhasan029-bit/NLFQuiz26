@@ -33,6 +33,26 @@ const AUTO_LOCK_IDLE_THRESHOLD_MS = 3000
 //    incoming call prompt) without instantly and irreversibly expelling the user.
 const ACTIVE_SWITCH_GRACE_MS = 3000
 
+// States where anti-cheat is NOT active (pre-game, post-game, between-round waiting)
+const UNGUARDED_STATUSES: Set<Status> = new Set([
+  STATUS.SHOW_ROOM,
+  STATUS.SHOW_START,
+  STATUS.SHOW_PREPARED,
+  STATUS.FINISHED,
+  STATUS.SUMMARY,
+  STATUS.WAIT,
+])
+
+function isGuarded(statusName: Status | undefined, gameId: string | null): boolean {
+  if (!statusName) return false
+  if (UNGUARDED_STATUSES.has(statusName)) return false
+  // Don't guard if player has already submitted
+  if (typeof localStorage !== "undefined" && gameId) {
+    if (localStorage.getItem(`quiz_submitted_${gameId}`) === "true") return false
+  }
+  return true
+}
+
 export const useAntiCheat = ({
   enabled,
   gameId,
@@ -40,9 +60,11 @@ export const useAntiCheat = ({
   mode = "kick",
 }: AntiCheatOptions) => {
   const { socket } = useSocket()
+
+  // Persistent refs — survive status transitions so we don't lose context
   const reportedRef = useRef(false)
   const lastViolationReportedAtRef = useRef(0)
-  const mountTimeRef = useRef(Date.now())
+  const guardedSinceRef = useRef<number | null>(null)   // when we first entered a guarded state
   const lastInteractionRef = useRef(Date.now())
   const isScreenLockedRef = useRef(false)
   const wakeGraceUntilRef = useRef(0)
@@ -50,84 +72,97 @@ export const useAntiCheat = ({
   const pendingBlurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wakeLockRef = useRef<any>(null)
 
-  const isSubmitted =
-    typeof localStorage !== "undefined" && gameId
-      ? localStorage.getItem(`quiz_submitted_${gameId}`) === "true"
-      : false
+  // Keep latest values in refs so event callbacks always see current values
+  // without needing to be re-registered (avoids listener thrash on status change)
+  const enabledRef = useRef(enabled)
+  const gameIdRef = useRef(gameId)
+  const statusNameRef = useRef(statusName)
+  const modeRef = useRef(mode)
 
-  // Guard all active quiz states where participants answer questions or view rounds
-  // Exclude initial room/lobby, end screens, waiting screens, and submitted state
-  const isGuardedState = Boolean(
-    !isSubmitted &&
-      statusName &&
-      statusName !== STATUS.SHOW_ROOM &&
-      statusName !== STATUS.FINISHED &&
-      statusName !== STATUS.SUMMARY &&
-      statusName !== STATUS.WAIT,
-  )
+  useEffect(() => { enabledRef.current = enabled }, [enabled])
+  useEffect(() => { gameIdRef.current = gameId }, [gameId])
+  useEffect(() => { modeRef.current = mode }, [mode])
 
+  // Track when we enter/leave guarded states — update guardedSinceRef
   useEffect(() => {
-    mountTimeRef.current = Date.now()
-    lastInteractionRef.current = Date.now()
-    isScreenLockedRef.current = false
-  }, [statusName])
+    const guarded = isGuarded(statusName, gameId)
+    statusNameRef.current = statusName
 
+    if (guarded && guardedSinceRef.current === null) {
+      // Just entered a guarded state for the first time (or after a gap)
+      guardedSinceRef.current = Date.now()
+      lastInteractionRef.current = Date.now()
+      isScreenLockedRef.current = false
+    } else if (!guarded) {
+      // Exited guarded state — clear the timer so we don't falsely fire
+      guardedSinceRef.current = null
+      if (pendingSwitchTimerRef.current) {
+        clearTimeout(pendingSwitchTimerRef.current)
+        pendingSwitchTimerRef.current = null
+      }
+      if (pendingBlurTimerRef.current) {
+        clearTimeout(pendingBlurTimerRef.current)
+        pendingBlurTimerRef.current = null
+      }
+    }
+  }, [statusName, gameId])
+
+  // Main effect — register listeners ONCE per mount (not per status change)
   useEffect(() => {
-    if (!enabled || !gameId || !isGuardedState) {
-      return
-    }
-    if (mode === "kick" && reportedRef.current) {
-      return
-    }
+    if (!enabled || !gameId) return
 
-    // 1. Screen Wake Lock: Keep screen awake so it doesn't wait and lock automatically while reading
+    // ── Wake Lock ─────────────────────────────────────────────────────────────
     const acquireWakeLock = async () => {
       if (
         typeof navigator === "undefined" ||
         !("wakeLock" in navigator) ||
         wakeLockRef.current
-      ) {
-        return
-      }
+      ) return
       try {
         wakeLockRef.current = await (navigator as any).wakeLock.request("screen")
         wakeLockRef.current.addEventListener("release", () => {
           wakeLockRef.current = null
         })
       } catch {
-        // Ignored if rejected (e.g. system battery saver mode)
+        // Ignored if rejected (e.g. battery saver)
       }
     }
 
     const releaseWakeLock = async () => {
       if (wakeLockRef.current) {
-        try {
-          await wakeLockRef.current.release()
-        } catch {
-          // Ignore
-        }
+        try { await wakeLockRef.current.release() } catch { /* ignore */ }
         wakeLockRef.current = null
       }
     }
 
     acquireWakeLock()
 
+    // ── Helpers ───────────────────────────────────────────────────────────────
+    const currentlyGuarded = () =>
+      enabledRef.current && isGuarded(statusNameRef.current, gameIdRef.current)
+
     const reportViolation = (reason: string) => {
+      if (!currentlyGuarded()) return
+
+      const mode = modeRef.current
       if (mode === "penalty") {
         if (Date.now() - lastViolationReportedAtRef.current < 6000) return
       } else {
         if (reportedRef.current) return
       }
 
-      // Never report if browser is offline or socket is disconnected (network disruption)
+      // Never report if offline or socket disconnected
       if (typeof navigator !== "undefined" && !navigator.onLine) return
       if (!socket.connected) return
 
-      // Grace period of 1500ms after entering a question/quiz state to allow layout/focus settle
-      if (Date.now() - mountTimeRef.current < 1500) return
+      // Grace period after first entering a guarded state
+      const guardedSince = guardedSinceRef.current
+      if (guardedSince === null || Date.now() - guardedSince < 1500) return
+
       // Grace period after waking up / unlocking screen
       if (Date.now() < wakeGraceUntilRef.current) return
-      // Never report if the device screen waited and locked automatically
+
+      // Never report if device screen auto-locked
       if (isScreenLockedRef.current) return
 
       if (mode === "penalty") {
@@ -136,10 +171,7 @@ export const useAntiCheat = ({
         reportedRef.current = true
       }
 
-      socket.emit(EVENTS.PLAYER.CHEATING_DETECTED, {
-        gameId,
-        reason,
-      })
+      socket.emit(EVENTS.PLAYER.CHEATING_DETECTED, { gameId: gameIdRef.current, reason })
     }
 
     const isTypingInInput = () => {
@@ -156,19 +188,14 @@ export const useAntiCheat = ({
     }
 
     const checkSplitScreen = () => {
-      if (typeof window === "undefined") return
-      // Skip if screen is locked or within wake-up grace period
-      if (isScreenLockedRef.current || Date.now() < wakeGraceUntilRef.current) {
-        return
-      }
+      if (!currentlyGuarded()) return
+      if (isScreenLockedRef.current || Date.now() < wakeGraceUntilRef.current) return
 
       const screenWidth = window.screen.availWidth || window.screen.width
       const screenHeight = window.screen.availHeight || window.screen.height
       const windowWidth = window.innerWidth
       const windowHeight = window.innerHeight
 
-      // 1. Horizontal Split: Browser width is less than 70% of available screen width
-      // (Applies to desktop, tablets, and landscape phones)
       if (screenWidth > 0) {
         const widthRatio = windowWidth / screenWidth
         if (widthRatio < SPLIT_SCREEN_WIDTH_RATIO) {
@@ -177,9 +204,6 @@ export const useAntiCheat = ({
         }
       }
 
-      // 2. Vertical Split: On mobile portrait or vertical multi-window,
-      // window height is less than 65% of screen height.
-      // We ignore this if user is currently typing in an input (virtual keyboard).
       if (screenHeight > 0 && !isTypingInInput()) {
         const heightRatio = windowHeight / screenHeight
         if (heightRatio < SPLIT_SCREEN_HEIGHT_RATIO) {
@@ -189,96 +213,62 @@ export const useAntiCheat = ({
       }
     }
 
-    // Track user touch, click, scroll, and key interaction timestamps
+    // ── Interaction tracking ──────────────────────────────────────────────────
     const registerInteraction = () => {
       lastInteractionRef.current = Date.now()
     }
 
     const interactionEvents = [
-      "touchstart",
-      "touchmove",
-      "touchend",
-      "pointerdown",
-      "mousedown",
-      "keydown",
-      "scroll",
+      "touchstart", "touchmove", "touchend",
+      "pointerdown", "mousedown", "keydown", "scroll",
     ] as const
 
-    interactionEvents.forEach((ev) => {
-      window.addEventListener(ev, registerInteraction, {
-        passive: true,
-        capture: true,
-      })
-    })
+    interactionEvents.forEach((ev) =>
+      window.addEventListener(ev, registerInteraction, { passive: true, capture: true })
+    )
 
-    // Schedule initial check after grace period (1500ms) to catch pre-existing split screens
-    const graceTimer = setTimeout(() => {
-      if (
-        typeof document !== "undefined" &&
-        document.visibilityState === "hidden" &&
-        !isScreenLockedRef.current
-      ) {
-        const idleTime = Date.now() - lastInteractionRef.current
-        if (idleTime < AUTO_LOCK_IDLE_THRESHOLD_MS) {
-          reportViolation("tab_switch")
-          return
-        }
-      }
-      checkSplitScreen()
-    }, 1500)
-
-    // Periodic check every 1500ms for split-screen changes
+    // ── Periodic split-screen check ───────────────────────────────────────────
     const intervalTimer = setInterval(() => {
-      if (typeof document !== "undefined") {
-        if (isScreenLockedRef.current) {
-          return
-        }
+      if (!currentlyGuarded()) return
+      if (isScreenLockedRef.current) return
+      if (typeof document === "undefined") return
 
-        // Detect if screen timed out and locked without explicit visibility event
-        const idleTime = Date.now() - lastInteractionRef.current
-        if (
-          document.visibilityState === "hidden" &&
-          idleTime >= AUTO_LOCK_IDLE_THRESHOLD_MS
-        ) {
+      const idleTime = Date.now() - lastInteractionRef.current
+
+      if (document.visibilityState === "hidden") {
+        // Idle long enough → auto-lock, not cheating
+        if (idleTime >= AUTO_LOCK_IDLE_THRESHOLD_MS) {
           isScreenLockedRef.current = true
           return
         }
-
-        if (document.visibilityState === "hidden") {
-          // If not an auto-lock, check if pending timer is already queued
-          if (!pendingSwitchTimerRef.current) {
-            reportViolation("tab_switch")
-          }
-          return
+        // Not idle → still hidden after grace? → violation
+        if (!pendingSwitchTimerRef.current) {
+          reportViolation("tab_switch")
         }
+        return
       }
 
       checkSplitScreen()
     }, 1500)
 
-    // Monitor window resize (e.g. user snapping or dragging window to split screen)
-    const handleResize = () => {
-      checkSplitScreen()
-    }
+    // ── Resize ────────────────────────────────────────────────────────────────
+    const handleResize = () => checkSplitScreen()
 
-    // Monitor focus loss (e.g. user clicking outside or screen locking)
+    // ── Blur ──────────────────────────────────────────────────────────────────
     const handleBlur = () => {
+      if (!currentlyGuarded()) return
       const idleTime = Date.now() - lastInteractionRef.current
 
-      // If the user was idle before blur, the screen waited and locked automatically!
       if (idleTime >= AUTO_LOCK_IDLE_THRESHOLD_MS || isScreenLockedRef.current) {
         isScreenLockedRef.current = true
         return
       }
 
-      if (pendingBlurTimerRef.current) {
-        clearTimeout(pendingBlurTimerRef.current)
-      }
+      if (pendingBlurTimerRef.current) clearTimeout(pendingBlurTimerRef.current)
 
-      // Allow a grace period for transient overlays or quick interactions
       pendingBlurTimerRef.current = setTimeout(() => {
         pendingBlurTimerRef.current = null
-        if (typeof document === "undefined") return
+        if (!currentlyGuarded()) return
         if (isScreenLockedRef.current) return
 
         const currentIdle = Date.now() - lastInteractionRef.current
@@ -287,15 +277,16 @@ export const useAntiCheat = ({
           return
         }
 
+        if (typeof document === "undefined") return
         if (!document.hasFocus() || document.visibilityState === "hidden") {
           reportViolation(
-            document.visibilityState === "hidden" ? "tab_switch" : "window_blur",
+            document.visibilityState === "hidden" ? "tab_switch" : "window_blur"
           )
         }
       }, ACTIVE_SWITCH_GRACE_MS)
     }
 
-    // Monitor focus gain (screen unlock, user returns to quiz)
+    // ── Focus ─────────────────────────────────────────────────────────────────
     const handleFocus = () => {
       if (pendingBlurTimerRef.current) {
         clearTimeout(pendingBlurTimerRef.current)
@@ -312,12 +303,11 @@ export const useAntiCheat = ({
       acquireWakeLock()
     }
 
-    // Monitor tab switching / app backgrounding vs automatic screen lock
+    // ── Visibility change ─────────────────────────────────────────────────────
     const handleVisibilityChange = () => {
       if (typeof document === "undefined") return
 
       if (document.visibilityState === "visible") {
-        // Screen unlocked or participant returned to quiz
         if (pendingSwitchTimerRef.current) {
           clearTimeout(pendingSwitchTimerRef.current)
           pendingSwitchTimerRef.current = null
@@ -326,7 +316,6 @@ export const useAntiCheat = ({
           clearTimeout(pendingBlurTimerRef.current)
           pendingBlurTimerRef.current = null
         }
-
         isScreenLockedRef.current = false
         lastInteractionRef.current = Date.now()
         wakeGraceUntilRef.current = Date.now() + 2500
@@ -334,12 +323,11 @@ export const useAntiCheat = ({
         return
       }
 
+      if (!currentlyGuarded()) return
+
       if (document.visibilityState === "hidden") {
         const idleTime = Date.now() - lastInteractionRef.current
 
-        // Automatic screen lock / sleep check:
-        // If the user did not touch the screen for >= AUTO_LOCK_IDLE_THRESHOLD_MS,
-        // the display simply waited and locked automatically. Never expel them!
         if (idleTime >= AUTO_LOCK_IDLE_THRESHOLD_MS) {
           isScreenLockedRef.current = true
           if (pendingSwitchTimerRef.current) {
@@ -349,15 +337,14 @@ export const useAntiCheat = ({
           return
         }
 
-        // If the user actively touched right before leaving, provide a grace period
-        // before counting as an intentional app/tab switch.
         if (!pendingSwitchTimerRef.current) {
           pendingSwitchTimerRef.current = setTimeout(() => {
             pendingSwitchTimerRef.current = null
             if (
               typeof document !== "undefined" &&
               document.visibilityState === "hidden" &&
-              !isScreenLockedRef.current
+              !isScreenLockedRef.current &&
+              currentlyGuarded()
             ) {
               reportViolation("tab_switch")
             }
@@ -366,8 +353,9 @@ export const useAntiCheat = ({
       }
     }
 
-    // Monitor mobile app switching / page hide
+    // ── Page hide (mobile app switching) ──────────────────────────────────────
     const handlePageHide = () => {
+      if (!currentlyGuarded()) return
       const idleTime = Date.now() - lastInteractionRef.current
       if (idleTime >= AUTO_LOCK_IDLE_THRESHOLD_MS || isScreenLockedRef.current) {
         isScreenLockedRef.current = true
@@ -377,13 +365,14 @@ export const useAntiCheat = ({
       if (!pendingSwitchTimerRef.current) {
         pendingSwitchTimerRef.current = setTimeout(() => {
           pendingSwitchTimerRef.current = null
-          if (!isScreenLockedRef.current) {
+          if (!isScreenLockedRef.current && currentlyGuarded()) {
             reportViolation("tab_switch")
           }
         }, ACTIVE_SWITCH_GRACE_MS)
       }
     }
 
+    // ── Register all listeners ────────────────────────────────────────────────
     window.addEventListener("resize", handleResize)
     window.addEventListener("blur", handleBlur)
     window.addEventListener("focus", handleFocus)
@@ -391,7 +380,6 @@ export const useAntiCheat = ({
     window.addEventListener("pagehide", handlePageHide)
 
     return () => {
-      clearTimeout(graceTimer)
       clearInterval(intervalTimer)
       if (pendingSwitchTimerRef.current) {
         clearTimeout(pendingSwitchTimerRef.current)
@@ -401,11 +389,9 @@ export const useAntiCheat = ({
         clearTimeout(pendingBlurTimerRef.current)
         pendingBlurTimerRef.current = null
       }
-      interactionEvents.forEach((ev) => {
-        window.removeEventListener(ev, registerInteraction, {
-          capture: true,
-        })
-      })
+      interactionEvents.forEach((ev) =>
+        window.removeEventListener(ev, registerInteraction, { capture: true })
+      )
       window.removeEventListener("resize", handleResize)
       window.removeEventListener("blur", handleBlur)
       window.removeEventListener("focus", handleFocus)
@@ -413,5 +399,8 @@ export const useAntiCheat = ({
       window.removeEventListener("pagehide", handlePageHide)
       releaseWakeLock()
     }
-  }, [enabled, gameId, isGuardedState, mode, socket])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, gameId, socket])
+  // Note: statusName and mode are intentionally NOT in deps — they're read via refs
+  // so listeners are registered only once and survive status transitions cleanly.
 }
