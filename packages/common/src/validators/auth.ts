@@ -27,7 +27,13 @@ export const joinTicketClaimsValidator = z.object({
 })
 
 export const managerLoginValidator = z.object({
+  username: z.string().optional(),
   password: z.string().min(1, "errors:manager.invalidPassword"),
+})
+
+export const registerHostValidator = z.object({
+  username: z.string().min(3, "errors:manager.usernameTooShort").max(32, "errors:manager.usernameTooLong"),
+  password: z.string().min(6, "errors:manager.passwordTooShort"),
 })
 
 export const sessionRequestValidator = z.object({

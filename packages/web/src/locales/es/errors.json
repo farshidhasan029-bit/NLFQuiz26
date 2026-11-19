@@ -32,7 +32,13 @@
   "manager": {
     "failedToReadConfig": "Error al leer la configuración del juego",
     "invalidPassword": "Contraseña incorrecta",
-    "passwordNotConfigured": "La contraseña del administrador no está configurada"
+    "passwordNotConfigured": "La contraseña del administrador no está configurada",
+    "invalidCredentials": "Nombre de usuario o contraseña incorrectos",
+    "usernameAlreadyExists": "El nombre de usuario ya existe",
+    "hostNotFound": "Host no encontrado",
+    "usernameTooShort": "El nombre de usuario debe tener al menos 3 caracteres",
+    "usernameTooLong": "El nombre de usuario no puede superar los 32 caracteres",
+    "passwordTooShort": "La contraseña debe tener al menos 6 caracteres"
   },
   "notFound": {
     "back": "Volver al inicio",

@@ -91,10 +91,34 @@ export const updateGameSettings = ({
   json: Partial<GameSettings>
 }) => unwrap(api.games[":gameId"].settings.$patch({ param: { gameId }, json }))
 
-export const managerLogin = (password: string) =>
-  unwrap(api.auth.manager.$post({ json: { password } }))
+export const managerLogin = ({ username, password }: { username: string; password: string }) =>
+  unwrap(api.auth.manager.$post({ json: { username: username || undefined, password } }))
 
 export const managerLogout = () => unwrap(api.auth.logout.$post())
+
+export const getHosts = async (): Promise<{ hosts: { id: string; username: string; createdAt: string }[] }> => {
+  const response = await authFetch("/api/auth/hosts")
+  if (!response.ok) throw new Error("Failed to fetch hosts")
+  return response.json() as Promise<{ hosts: { id: string; username: string; createdAt: string }[] }>
+}
+
+export const registerHost = async ({ username, password }: { username: string; password: string }): Promise<{ id: string; username: string }> => {
+  const response = await authFetch("/api/auth/register-host", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  })
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as { error?: string }
+    throw new Error(body.error ?? "Failed to register host")
+  }
+  return response.json() as Promise<{ id: string; username: string }>
+}
+
+export const removeHost = async (hostId: string): Promise<void> => {
+  const response = await authFetch(`/api/auth/hosts/${hostId}`, { method: "DELETE" })
+  if (!response.ok) throw new Error("Failed to delete host")
+}
 
 export const exportBackup = async (): Promise<Blob> => {
   const response = await authFetch("/api/backup/export")

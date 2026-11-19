@@ -32,7 +32,13 @@
   "manager": {
     "failedToReadConfig": "ゲーム設定の読み込みに失敗しました",
     "invalidPassword": "パスワードが無効です",
-    "passwordNotConfigured": "管理者パスワードが設定されていません"
+    "passwordNotConfigured": "管理者パスワードが設定されていません",
+    "invalidCredentials": "ユーザー名またはパスワードが無効です",
+    "usernameAlreadyExists": "このユーザー名は既に使用されています",
+    "hostNotFound": "ホストが見つかりません",
+    "usernameTooShort": "ユーザー名は3文字以上必要です",
+    "usernameTooLong": "ユーザー名は32文字以下にしてください",
+    "passwordTooShort": "パスワードは6文字以上必要です"
   },
   "notFound": {
     "back": "ホームに戻る",

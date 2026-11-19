@@ -32,7 +32,13 @@
   "manager": {
     "failedToReadConfig": "Nie udało się odczytać konfiguracji gry",
     "invalidPassword": "Nieprawidłowe hasło",
-    "passwordNotConfigured": "Hasło prowadzącego nie zostało skonfigurowane"
+    "passwordNotConfigured": "Hasło prowadzącego nie zostało skonfigurowane",
+    "invalidCredentials": "Nieprawidłowa nazwa użytkownika lub hasło",
+    "usernameAlreadyExists": "Nazwa użytkownika już istnieje",
+    "hostNotFound": "Host nie znaleziony",
+    "usernameTooShort": "Nazwa użytkownika musi mieć co najmniej 3 znaki",
+    "usernameTooLong": "Nazwa użytkownika nie może przekraczać 32 znaków",
+    "passwordTooShort": "Hasło musi mieć co najmniej 6 znaków"
   },
   "notFound": {
     "back": "Wróć na stronę główną",

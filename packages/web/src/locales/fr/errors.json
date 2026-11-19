@@ -32,7 +32,13 @@
   "manager": {
     "failedToReadConfig": "Impossible de lire la configuration",
     "invalidPassword": "Mot de passe invalide",
-    "passwordNotConfigured": "Mot de passe manager non configuré"
+    "passwordNotConfigured": "Mot de passe manager non configuré",
+    "invalidCredentials": "Nom d'utilisateur ou mot de passe invalide",
+    "usernameAlreadyExists": "Ce nom d'utilisateur existe déjà",
+    "hostNotFound": "Hôte introuvable",
+    "usernameTooShort": "Le nom d'utilisateur doit comporter au moins 3 caractères",
+    "usernameTooLong": "Le nom d'utilisateur ne peut pas dépasser 32 caractères",
+    "passwordTooShort": "Le mot de passe doit comporter au moins 6 caractères"
   },
   "notFound": {
     "back": "Retour à l'accueil",

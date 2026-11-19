@@ -32,7 +32,13 @@
   "manager": {
     "failedToReadConfig": "Spielkonfiguration konnte nicht gelesen werden",
     "invalidPassword": "Ungültiges Passwort",
-    "passwordNotConfigured": "Manager-Passwort ist nicht konfiguriert"
+    "passwordNotConfigured": "Manager-Passwort ist nicht konfiguriert",
+    "invalidCredentials": "Ungültiger Benutzername oder Passwort",
+    "usernameAlreadyExists": "Benutzername bereits vergeben",
+    "hostNotFound": "Host nicht gefunden",
+    "usernameTooShort": "Benutzername muss mindestens 3 Zeichen lang sein",
+    "usernameTooLong": "Benutzername darf maximal 32 Zeichen lang sein",
+    "passwordTooShort": "Passwort muss mindestens 6 Zeichen lang sein"
   },
   "notFound": {
     "back": "Zurück zur Startseite",

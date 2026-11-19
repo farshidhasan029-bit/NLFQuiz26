@@ -11,13 +11,15 @@ const routes = apiFactory
   .createApp()
   .use(requireManager)
   .get("/export", (c) => {
-    const bundle = exportBackup()
+    const { claims } = c.var
+    const bundle = exportBackup(claims.sub)
     const filename = `nlfquiz-backup-${new Date().toISOString().slice(0, 10)}.json`
     c.header("Content-Disposition", `attachment; filename="${filename}"`)
     c.header("Content-Type", "application/json")
     return c.body(JSON.stringify(bundle, null, 2))
   })
   .post("/restore", async (c) => {
+    const { claims } = c.var
     let bundle: BackupBundle
 
     try {
@@ -36,7 +38,7 @@ const routes = apiFactory
       )
     }
 
-    const result = restoreBackup(bundle)
+    const result = restoreBackup(bundle, claims.sub)
     return c.json(result)
   })
 

@@ -2,6 +2,7 @@ import Card from "@razzia/web/components/Card"
 import LanguageSwitcher from "@razzia/web/components/LanguageSwitcher"
 import { useManagerStore } from "@razzia/web/features/game/stores/manager"
 import ConfigBackup from "@razzia/web/features/manager/components/configurations/ConfigBackup"
+import ConfigHosts from "@razzia/web/features/manager/components/configurations/ConfigHosts"
 import ConfigManageQuizz from "@razzia/web/features/manager/components/configurations/ConfigManageQuizz"
 import ConfigResults from "@razzia/web/features/manager/components/configurations/ConfigResults"
 import ConfigSelectQuizz from "@razzia/web/features/manager/components/configurations/ConfigSelectQuizz"
@@ -30,6 +31,10 @@ const tabs = [
   {
     nameKey: "manager:tabs.backup",
     component: ConfigBackup,
+  },
+  {
+    nameKey: "manager:tabs.hosts",
+    component: ConfigHosts,
   },
 ]
 

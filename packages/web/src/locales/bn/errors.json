@@ -32,7 +32,13 @@
   "manager": {
     "failedToReadConfig": "গেম কনফিগ পড়তে ব্যর্থ হয়েছে",
     "invalidPassword": "ভুল পাসওয়ার্ড",
-    "passwordNotConfigured": "ম্যানেজার পাসওয়ার্ড কনফিগার করা নেই"
+    "passwordNotConfigured": "ম্যানেজার পাসওয়ার্ড কনফিগার করা নেই",
+    "invalidCredentials": "ভুল ব্যবহারকারীর নাম বা পাসওয়ার্ড",
+    "usernameAlreadyExists": "ব্যবহারকারীর নাম ইতিমধ্যে বিদ্যমান",
+    "hostNotFound": "হোস্ট পাওয়া যায়নি",
+    "usernameTooShort": "ব্যবহারকারীর নাম কমপক্ষে ৩ অক্ষর হতে হবে",
+    "usernameTooLong": "ব্যবহারকারীর নাম ৩২ অক্ষরের বেশি হতে পারবে না",
+    "passwordTooShort": "পাসওয়ার্ড কমপক্ষে ৬ অক্ষর হতে হবে"
   },
   "notFound": {
     "back": "হোমে ফিরে যান",

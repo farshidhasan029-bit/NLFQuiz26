@@ -12,6 +12,7 @@
     "@hono/zod-validator": "^0.9.1",
     "@razzia/common": "workspace:*",
     "@types/pdf-parse": "^1.1.5",
+    "bcryptjs": "^3.0.3",
     "dayjs": "^1.11.23",
     "file-type": "^22.2.0",
     "hono": "catalog:",
@@ -25,6 +26,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
     "@types/node": "catalog:",
     "rolldown": "^1.2.15",
     "socket.io-client": "catalog:",

@@ -1,6 +1,7 @@
 {
   "configurationsTitle": "কনফিগারেশন",
   "logout": "লগআউট",
+  "usernamePlaceholder": "ব্যবহারকারীর নাম",
   "passwordPlaceholder": "পাসওয়ার্ড",
   "quizz": {
     "create": "কুইজ তৈরি করুন",
@@ -59,7 +60,8 @@
     "play": "খেলুন",
     "quizz": "কুইজ",
     "results": "ফলাফল",
-    "backup": "ব্যাকআপ"
+    "backup": "ব্যাকআপ",
+    "hosts": "হোস্ট"
   },
   "backup": {
     "warningTitle": "ডেটা সার্ভারে সংরক্ষিত",
@@ -76,5 +78,15 @@
     "restoring": "পুনরুদ্ধার হচ্ছে…",
     "restoreSuccess": "{{quizzCount}}টি কুইজ এবং {{resultCount}}টি ফলাফল পুনরুদ্ধার হয়েছে।",
     "invalidFile": "অবৈধ ব্যাকআপ ফাইল।"
+  },
+  "hosts": {
+    "title": "হোস্ট অ্যাকাউন্ট",
+    "none": "এখনো কোনো হোস্ট তৈরি হয়নি",
+    "addTitle": "নতুন হোস্ট যোগ করুন",
+    "createBtn": "হোস্ট তৈরি করুন",
+    "creating": "তৈরি হচ্ছে...",
+    "created": "\"{{username}}\" হোস্ট তৈরি হয়েছে",
+    "deleted": "হোস্ট মুছে দেওয়া হয়েছে",
+    "delete": "হোস্ট মুছুন"
   }
 }

@@ -32,7 +32,13 @@
   "manager": {
     "failedToReadConfig": "Oyun yapılandırması okunamadı",
     "invalidPassword": "Geçersiz şifre",
-    "passwordNotConfigured": "Yönetici şifresi ayarlanmamış"
+    "passwordNotConfigured": "Yönetici şifresi ayarlanmamış",
+    "invalidCredentials": "Geçersiz kullanıcı adı veya şifre",
+    "usernameAlreadyExists": "Kullanıcı adı zaten mevcut",
+    "hostNotFound": "Host bulunamadı",
+    "usernameTooShort": "Kullanıcı adı en az 3 karakter olmalıdır",
+    "usernameTooLong": "Kullanıcı adı 32 karakteri geçemez",
+    "passwordTooShort": "Şifre en az 6 karakter olmalıdır"
   },
   "notFound": {
     "back": "Ana sayfaya dön",

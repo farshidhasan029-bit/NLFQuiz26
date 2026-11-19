@@ -5,6 +5,7 @@ import type {
   QuizzMode,
   QuizzWithId,
 } from "@razzia/common/types/game"
+import type { HostAccount } from "@razzia/common/types/auth"
 import {
   normalizeLegacyQuizz,
   quizzValidator,
@@ -94,20 +95,79 @@ export const initConfig = () => {
       JSON.stringify({ id: nanoid(), ...EXAMPLE_QUIZZ }, null, 2),
     )
   }
+
+  const hostsPath = getPath("hosts.json")
+  if (!fs.existsSync(hostsPath)) {
+    fs.writeFileSync(hostsPath, JSON.stringify([], null, 2))
+  }
 }
+
+// ── Host account management ──────────────────────────────────────────────────
+
+const getHostsPath = () => getPath("hosts.json")
+
+export const getHosts = (): HostAccount[] => {
+  try {
+    const raw = fs.readFileSync(getHostsPath(), "utf-8")
+    return JSON.parse(raw) as HostAccount[]
+  } catch {
+    return []
+  }
+}
+
+const saveHosts = (hosts: HostAccount[]): void => {
+  fs.writeFileSync(getHostsPath(), JSON.stringify(hosts, null, 2))
+}
+
+export const findHostByUsername = (username: string): HostAccount | undefined =>
+  getHosts().find(
+    (h) => h.username.toLowerCase() === username.toLowerCase(),
+  )
+
+export const findHostById = (id: string): HostAccount | undefined =>
+  getHosts().find((h) => h.id === id)
+
+export const createHost = (username: string, passwordHash: string): HostAccount => {
+  const hosts = getHosts()
+
+  if (hosts.some((h) => h.username.toLowerCase() === username.toLowerCase())) {
+    throw invalidInput("errors:manager.usernameAlreadyExists")
+  }
+
+  const host: HostAccount = {
+    id: nanoid(),
+    username,
+    passwordHash,
+    createdAt: new Date().toISOString(),
+  }
+
+  saveHosts([...hosts, host])
+  return host
+}
+
+export const deleteHost = (id: string): void => {
+  const hosts = getHosts()
+  const updated = hosts.filter((h) => h.id !== id)
+  if (updated.length === hosts.length) {
+    throw notFound("errors:manager.hostNotFound")
+  }
+  saveHosts(updated)
+}
+
+// ── Quizz — host-scoped ───────────────────────────────────────────────────────
 
 const subjectCollator = new Intl.Collator(undefined, {
   numeric: true,
   sensitivity: "base",
 })
 
-export const getQuizzMeta = () =>
-  getQuizz()
+export const getQuizzMeta = (hostId?: string) =>
+  getQuizz(hostId)
     .map(({ id, subject }) => ({ id, subject }))
     .sort((a, b) => subjectCollator.compare(a.subject, b.subject))
 
-export const getQuizzById = (id: string): QuizzWithId => {
-  const quizz = getQuizz().find((q) => q.id === id)
+export const getQuizzById = (id: string, hostId?: string): QuizzWithId => {
+  const quizz = getQuizz(hostId).find((q) => q.id === id)
 
   if (!quizz) {
     throw notFound("errors:quizz.notFound")
@@ -116,23 +176,19 @@ export const getQuizzById = (id: string): QuizzWithId => {
   return quizz
 }
 
-export const getQuizz = (): QuizzWithId[] => {
+/** Internal: load all quizz files, returning raw data including optional hostId. */
+const loadAllQuizzRaw = (): Array<QuizzWithId & { hostId?: string }> => {
   const isExists = fs.existsSync(getPath("quizz"))
-
-  if (!isExists) {
-    return []
-  }
+  if (!isExists) return []
 
   try {
     const files = listJsonFiles(getPath("quizz"))
-
-    const quizz: QuizzWithId[] = files.flatMap((file) => {
+    return files.flatMap((file) => {
       const filePath = getPath(`quizz/${file}`)
       const data = readJson(filePath)
 
       if (!data) {
         console.warn(`Invalid quizz config "${file}": unreadable`)
-
         return []
       }
 
@@ -140,33 +196,35 @@ export const getQuizz = (): QuizzWithId[] => {
 
       if (!result.success) {
         console.warn(`Invalid quizz config "${file}":`, result.error.issues)
-
         return []
       }
 
+      let id: string
       if (typeof data.id === "string") {
-        return [{ id: data.id, ...result.data }]
+        id = data.id
+      } else {
+        id = nanoid()
+        fs.writeFileSync(filePath, JSON.stringify({ id, ...result.data }, null, 2))
       }
 
-      const id = nanoid()
-
-      fs.writeFileSync(
-        filePath,
-        JSON.stringify({ id, ...result.data }, null, 2),
-      )
-
-      return [{ id, ...result.data }]
+      const hostId = typeof data.hostId === "string" ? data.hostId : undefined
+      return [{ id, hostId, ...result.data }]
     })
-
-    return quizz
   } catch (error) {
     console.error("Failed to read quizz config:", error)
-
     return []
   }
 }
 
-export const updateQuizz = (id: string, data: unknown): { id: string } => {
+export const getQuizz = (hostId?: string): QuizzWithId[] => {
+  const all = loadAllQuizzRaw()
+  if (!hostId) return all.map(({ hostId: _h, ...q }) => q)
+  return all
+    .filter((q) => q.hostId === hostId)
+    .map(({ hostId: _h, ...q }) => q)
+}
+
+export const updateQuizz = (id: string, data: unknown, hostId?: string): { id: string } => {
   const result = quizzValidator.safeParse(data)
 
   if (!result.success) {
@@ -175,21 +233,41 @@ export const updateQuizz = (id: string, data: unknown): { id: string } => {
 
   const file = requireFileById("quizz", id, "errors:quizz.notFound")
 
+  // If hostId provided, verify ownership
+  if (hostId) {
+    const existing = readJson(join(getPath("quizz"), file))
+    if (existing?.hostId && existing.hostId !== hostId) {
+      throw notFound("errors:quizz.notFound")
+    }
+  }
+
+  // Preserve existing hostId when writing back
+  const existingData = readJson(join(getPath("quizz"), file))
+  const existingHostId = existingData?.hostId
+
   fs.writeFileSync(
     join(getPath("quizz"), file),
-    JSON.stringify({ id, ...result.data }, null, 2),
+    JSON.stringify({ id, ...(existingHostId ? { hostId: existingHostId } : {}), ...result.data }, null, 2),
   )
 
   return { id }
 }
 
-export const deleteQuizz = (id: string): void => {
+export const deleteQuizz = (id: string, hostId?: string): void => {
   const file = requireFileById("quizz", id, "errors:quizz.notFound")
+
+  // If hostId provided, verify ownership
+  if (hostId) {
+    const existing = readJson(join(getPath("quizz"), file))
+    if (existing?.hostId && existing.hostId !== hostId) {
+      throw notFound("errors:quizz.notFound")
+    }
+  }
 
   fs.unlinkSync(join(getPath("quizz"), file))
 }
 
-export const saveResult = (data: GameResult): void => {
+export const saveResult = (data: GameResult, hostId?: string): void => {
   try {
     const resultsPath = getPath("results")
 
@@ -197,9 +275,11 @@ export const saveResult = (data: GameResult): void => {
       fs.mkdirSync(resultsPath)
     }
 
+    const payload = hostId ? { ...data, hostId } : data
+
     fs.writeFileSync(
       join(resultsPath, `${nanoid()}.json`),
-      JSON.stringify(data, null, 2),
+      JSON.stringify(payload, null, 2),
     )
 
     console.log(`Saved result for "${data.subject}"`)
@@ -209,16 +289,16 @@ export const saveResult = (data: GameResult): void => {
 }
 
 /** Results written before survey mode have no `gameMode` field. */
-type StoredResult = Omit<GameResult, "gameMode"> & { gameMode?: QuizzMode }
+type StoredResult = Omit<GameResult, "gameMode"> & { gameMode?: QuizzMode; hostId?: string }
 
-export const getResultsMeta = (): GameResultMeta[] => {
+export const getResultsMeta = (hostId?: string): GameResultMeta[] => {
   const resultsPath = getPath("results")
 
   if (!fs.existsSync(resultsPath)) {
     return []
   }
 
-  const readMeta = (file: string): GameResultMeta | null => {
+  const readMeta = (file: string): (GameResultMeta & { _hostId?: string }) | null => {
     const data = readJson(join(resultsPath, file)) as StoredResult | null
 
     if (!data) {
@@ -241,6 +321,7 @@ export const getResultsMeta = (): GameResultMeta[] => {
         playerCount: data.players.length,
         winnerName: topPlayer?.username,
         topScore: topPlayer?.points,
+        _hostId: data.hostId,
       }
     } catch {
       return null
@@ -250,14 +331,16 @@ export const getResultsMeta = (): GameResultMeta[] => {
   try {
     return listJsonFiles(resultsPath)
       .map(readMeta)
-      .filter((meta): meta is GameResultMeta => meta !== null)
+      .filter((meta): meta is GameResultMeta & { _hostId?: string } => meta !== null)
+      .filter((meta) => !hostId || !meta._hostId || meta._hostId === hostId)
+      .map(({ _hostId: _, ...meta }) => meta)
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
   } catch {
     return []
   }
 }
 
-export const getResultById = (id: string): GameResult => {
+export const getResultById = (id: string, hostId?: string): GameResult => {
   const file = requireFileById("results", id, "errors:result.notFound")
   const data = readJson(join(getPath("results"), file))
 
@@ -267,16 +350,29 @@ export const getResultById = (id: string): GameResult => {
 
   const result = data as unknown as StoredResult
 
+  // If hostId provided, verify ownership (allow results with no hostId for backward compat)
+  if (hostId && result.hostId && result.hostId !== hostId) {
+    throw notFound("errors:result.notFound")
+  }
+
   return { ...result, gameMode: result.gameMode ?? QUIZZ_MODES.QUIZ }
 }
 
-export const deleteResult = (id: string): void => {
+export const deleteResult = (id: string, hostId?: string): void => {
   const file = requireFileById("results", id, "errors:result.notFound")
+
+  // If hostId provided, verify ownership
+  if (hostId) {
+    const existing = readJson(join(getPath("results"), file)) as StoredResult | null
+    if (existing?.hostId && existing.hostId !== hostId) {
+      throw notFound("errors:result.notFound")
+    }
+  }
 
   fs.unlinkSync(join(getPath("results"), file))
 }
 
-export const getResults = (): GameResult[] => {
+export const getResults = (hostId?: string): GameResult[] => {
   const resultsPath = getPath("results")
 
   if (!fs.existsSync(resultsPath)) {
@@ -288,9 +384,10 @@ export const getResults = (): GameResult[] => {
       .map((file) => {
         const data = readJson(join(resultsPath, file)) as StoredResult | null
         if (!data) return null
-        return { ...data, gameMode: data.gameMode ?? QUIZZ_MODES.QUIZ } as GameResult
+        return { ...data, gameMode: data.gameMode ?? QUIZZ_MODES.QUIZ } as GameResult & { hostId?: string }
       })
-      .filter((r): r is GameResult => r !== null)
+      .filter((r): r is GameResult & { hostId?: string } => r !== null)
+      .filter((r) => !hostId || !r.hostId || r.hostId === hostId)
   } catch {
     return []
   }
@@ -303,14 +400,14 @@ export interface BackupBundle {
   results: GameResult[]
 }
 
-export const exportBackup = (): BackupBundle => ({
+export const exportBackup = (hostId?: string): BackupBundle => ({
   version: 1,
   exportedAt: new Date().toISOString(),
-  quizz: getQuizz(),
-  results: getResults(),
+  quizz: getQuizz(hostId),
+  results: getResults(hostId),
 })
 
-export const restoreBackup = (bundle: BackupBundle): { quizzCount: number; resultCount: number } => {
+export const restoreBackup = (bundle: BackupBundle, hostId?: string): { quizzCount: number; resultCount: number } => {
   // Ensure directories exist
   initConfig()
   const resultsPath = getPath("results")
@@ -331,7 +428,7 @@ export const restoreBackup = (bundle: BackupBundle): { quizzCount: number; resul
       // Don't overwrite if same id already exists
       const existing = findFileById("quizz", id)
       if (!existing) {
-        fs.writeFileSync(filePath, JSON.stringify({ id, ...result.data }, null, 2))
+        fs.writeFileSync(filePath, JSON.stringify({ id, ...(hostId ? { hostId } : {}), ...result.data }, null, 2))
         quizzCount++
       }
     } catch {
@@ -346,7 +443,7 @@ export const restoreBackup = (bundle: BackupBundle): { quizzCount: number; resul
       if (!existing) {
         fs.writeFileSync(
           join(resultsPath, `${result.id}.json`),
-          JSON.stringify(result, null, 2),
+          JSON.stringify({ ...result, ...(hostId ? { hostId } : {}) }, null, 2),
         )
         resultCount++
       }
@@ -358,7 +455,7 @@ export const restoreBackup = (bundle: BackupBundle): { quizzCount: number; resul
   return { quizzCount, resultCount }
 }
 
-export const saveQuizz = (data: unknown): { id: string } => {
+export const saveQuizz = (data: unknown, hostId?: string): { id: string } => {
   const result = quizzValidator.safeParse(data)
 
   if (!result.success) {
@@ -370,7 +467,7 @@ export const saveQuizz = (data: unknown): { id: string } => {
 
   fs.writeFileSync(
     getPath(`quizz/${fileName}.json`),
-    JSON.stringify({ id, ...result.data }, null, 2),
+    JSON.stringify({ id, ...(hostId ? { hostId } : {}), ...result.data }, null, 2),
   )
 
   return { id }

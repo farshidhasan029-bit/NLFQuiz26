@@ -1,6 +1,7 @@
 {
   "configurationsTitle": "Configuraciones",
   "logout": "Cerrar sesión",
+  "usernamePlaceholder": "Nombre de usuario",
   "passwordPlaceholder": "Contraseña",
   "quizz": {
     "create": "Crear cuestionario",
@@ -59,7 +60,8 @@
     "play": "Jugar",
     "quizz": "Cuestionario",
     "results": "Resultados",
-    "backup": "Copia de seguridad"
+    "backup": "Copia de seguridad",
+    "hosts": "Hosts"
   },
   "backup": {
     "warningTitle": "Los datos se almacenan en el servidor",
@@ -76,5 +78,15 @@
     "restoring": "Restaurando…",
     "restoreSuccess": "Se restauraron {{quizzCount}} cuestionario(s) y {{resultCount}} resultado(s).",
     "invalidFile": "Archivo de copia de seguridad no válido."
+  },
+  "hosts": {
+    "title": "Cuentas de host",
+    "none": "Aun no hay hosts creados",
+    "addTitle": "Anadir nuevo host",
+    "createBtn": "Crear host",
+    "creating": "Creando...",
+    "created": "Host \"{{username}}\" creado",
+    "deleted": "Host eliminado",
+    "delete": "Eliminar host"
   }
 }

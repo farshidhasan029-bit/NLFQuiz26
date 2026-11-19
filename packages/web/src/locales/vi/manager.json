@@ -1,6 +1,7 @@
 {
   "configurationsTitle": "Cấu hình",
   "logout": "Đăng xuất",
+  "usernamePlaceholder": "Tên người dùng",
   "passwordPlaceholder": "Mật khẩu",
   "quizz": {
     "create": "Tạo trò chơi",
@@ -59,7 +60,8 @@
     "play": "Trò chơi",
     "quizz": "Cấu hình",
     "results": "Kết quả",
-    "backup": "Sao lưu"
+    "backup": "Sao lưu",
+    "hosts": "Hosts"
   },
   "backup": {
     "warningTitle": "Dữ liệu được lưu trên máy chủ",
@@ -76,5 +78,15 @@
     "restoring": "Đang khôi phục…",
     "restoreSuccess": "Đã khôi phục {{quizzCount}} bài kiểm tra và {{resultCount}} kết quả.",
     "invalidFile": "File sao lưu không hợp lệ."
+  },
+  "hosts": {
+    "title": "Tai khoan host",
+    "none": "Chua co host nao duoc tao",
+    "addTitle": "Them host moi",
+    "createBtn": "Tao host",
+    "creating": "Dang tao...",
+    "created": "Host \"{{username}}\" da duoc tao",
+    "deleted": "Da xoa host",
+    "delete": "Xoa host"
   }
 }

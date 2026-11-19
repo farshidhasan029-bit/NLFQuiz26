@@ -1,6 +1,7 @@
 {
   "configurationsTitle": "Konfiguracja",
   "logout": "Wyloguj",
+  "usernamePlaceholder": "Nazwa użytkownika",
   "passwordPlaceholder": "Hasło",
   "quizz": {
     "create": "Utwórz quiz",
@@ -62,7 +63,8 @@
     "play": "Graj",
     "quizz": "Quizy",
     "results": "Wyniki",
-    "backup": "Kopia zapasowa"
+    "backup": "Kopia zapasowa",
+    "hosts": "Hosty"
   },
   "backup": {
     "warningTitle": "Dane są przechowywane na serwerze",
@@ -79,5 +81,15 @@
     "restoring": "Przywracanie…",
     "restoreSuccess": "Przywrócono {{quizzCount}} quiz(ów) i {{resultCount}} wynik(ów).",
     "invalidFile": "Nieprawidłowy plik kopii zapasowej."
+  },
+  "hosts": {
+    "title": "Konta hostow",
+    "none": "Brak hostow",
+    "addTitle": "Dodaj nowego hosta",
+    "createBtn": "Utworz hosta",
+    "creating": "Tworzenie...",
+    "created": "Host \"{{username}}\" utworzony",
+    "deleted": "Host usuniety",
+    "delete": "Usun hosta"
   }
 }

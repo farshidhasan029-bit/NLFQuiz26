@@ -32,7 +32,13 @@
   "manager": {
     "failedToReadConfig": "Không đọc được cấu hình trò chơi",
     "invalidPassword": "Mật khẩu không hợp lệ",
-    "passwordNotConfigured": "Mật khẩu quản trị viên chưa được cấu hình"
+    "passwordNotConfigured": "Mật khẩu quản trị viên chưa được cấu hình",
+    "invalidCredentials": "Tên người dùng hoặc mật khẩu không hợp lệ",
+    "usernameAlreadyExists": "Tên người dùng đã tồn tại",
+    "hostNotFound": "Không tìm thấy host",
+    "usernameTooShort": "Tên người dùng phải có ít nhất 3 ký tự",
+    "usernameTooLong": "Tên người dùng không được vượt quá 32 ký tự",
+    "passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự"
   },
   "notFound": {
     "back": "Về trang chủ",

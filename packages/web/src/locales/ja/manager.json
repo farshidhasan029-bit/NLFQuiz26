@@ -1,6 +1,7 @@
 {
   "configurationsTitle": "設定",
   "logout": "ログアウト",
+  "usernamePlaceholder": "ユーザー名",
   "passwordPlaceholder": "パスワード",
   "quizz": {
     "create": "クイズを作成",
@@ -59,7 +60,8 @@
     "play": "プレイ",
     "quizz": "クイズ",
     "results": "結果",
-    "backup": "バックアップ"
+    "backup": "バックアップ",
+    "hosts": "ホスト"
   },
   "backup": {
     "warningTitle": "データはサーバーに保存されます",
@@ -76,5 +78,15 @@
     "restoring": "復元中…",
     "restoreSuccess": "{{quizzCount}}件のクイズと{{resultCount}}件の結果を復元しました。",
     "invalidFile": "無効なバックアップファイルです。"
+  },
+  "hosts": {
+    "title": "ホストアカウント",
+    "none": "ホストはまだ作成されていません",
+    "addTitle": "新しいホストを追加",
+    "createBtn": "ホストを作成",
+    "creating": "作成中...",
+    "created": "ホスト{{username}}を作成しました",
+    "deleted": "ホストを削除しました",
+    "delete": "ホストを削除"
   }
 }

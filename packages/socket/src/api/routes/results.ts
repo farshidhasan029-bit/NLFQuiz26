@@ -10,11 +10,17 @@ import { StatusCodes } from "http-status-codes"
 const routes = apiFactory
   .createApp()
   .use(requireManager)
-  .get("/", (c) => c.json({ results: getResultsMeta() }))
-  .get("/:id", (c) => c.json(getResultById(c.req.param("id"))))
+  .get("/", (c) => {
+    const { claims } = c.var
+    return c.json({ results: getResultsMeta(claims.sub) })
+  })
+  .get("/:id", (c) => {
+    const { claims } = c.var
+    return c.json(getResultById(c.req.param("id"), claims.sub))
+  })
   .delete("/:id", (c) => {
-    deleteResult(c.req.param("id"))
-
+    const { claims } = c.var
+    deleteResult(c.req.param("id"), claims.sub)
     return c.body(null, StatusCodes.NO_CONTENT)
   })
 
