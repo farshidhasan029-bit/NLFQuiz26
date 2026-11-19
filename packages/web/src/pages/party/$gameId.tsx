@@ -148,6 +148,7 @@ const PlayerGamePage = () => {
       // Clear submitted flag when game is fully over
       if (name === STATUS.FINISHED && gameIdParam) {
         localStorage.removeItem(`quiz_submitted_${gameIdParam}`)
+        // Don't clear eval_status/eval_data here — player may still want to view their evaluation
       }
       const dataObj = data as
         | {
@@ -207,7 +208,11 @@ const PlayerGamePage = () => {
   useEvent(EVENTS.GAME.RESET, (message) => {
     localStorage.removeItem("game_pin")
     localStorage.removeItem("game_id")
-    if (gameIdParam) localStorage.removeItem(`quiz_submitted_${gameIdParam}`)
+    if (gameIdParam) {
+      localStorage.removeItem(`quiz_submitted_${gameIdParam}`)
+      localStorage.removeItem(`eval_status_${gameIdParam}`)
+      localStorage.removeItem(`eval_data_${gameIdParam}`)
+    }
     navigate({ to: "/" })
     resetPlayer()
     setQuestionStates(null)

@@ -22,10 +22,30 @@ const PlayerFinished = ({ data: { rank, subject } }: Props) => {
   const { t } = useTranslation()
   const hasRank = typeof rank === "number"
 
+  const storageKey = gameId ? `eval_status_${gameId}` : null
+  const evalDataKey = gameId ? `eval_data_${gameId}` : null
+
   const [requestStatus, setRequestStatus] = useState<
     "idle" | "pending" | "approved" | "denied"
-  >("idle")
-  const [evaluation, setEvaluation] = useState<PlayerFullEvaluation | null>(null)
+  >(() => {
+    if (storageKey && typeof localStorage !== "undefined") {
+      return (localStorage.getItem(storageKey) as "idle" | "pending" | "approved" | "denied") ?? "idle"
+    }
+    return "idle"
+  })
+
+  const [evaluation, setEvaluation] = useState<PlayerFullEvaluation | null>(() => {
+    if (evalDataKey && typeof localStorage !== "undefined") {
+      try {
+        const raw = localStorage.getItem(evalDataKey)
+        return raw ? (JSON.parse(raw) as PlayerFullEvaluation) : null
+      } catch {
+        return null
+      }
+    }
+    return null
+  })
+
   const [showModal, setShowModal] = useState(false)
 
   useEvent(EVENTS.PLAYER.RESULTS_EVALUATION, (data) => {
@@ -33,9 +53,12 @@ const PlayerFinished = ({ data: { rank, subject } }: Props) => {
       setRequestStatus("approved")
       setEvaluation(data.evaluation)
       setShowModal(true)
+      if (storageKey) localStorage.setItem(storageKey, "approved")
+      if (evalDataKey) localStorage.setItem(evalDataKey, JSON.stringify(data.evaluation))
       toast.success(t("game:resultRequestApprovedToast"))
     } else {
       setRequestStatus("denied")
+      if (storageKey) localStorage.setItem(storageKey, "denied")
       toast.error(t("game:resultRequestDeniedToast"))
     }
   })
@@ -43,6 +66,7 @@ const PlayerFinished = ({ data: { rank, subject } }: Props) => {
   const handleSendQuery = () => {
     if (!gameId) return
     setRequestStatus("pending")
+    if (storageKey) localStorage.setItem(storageKey, "pending")
     socket.emit(EVENTS.PLAYER.REQUEST_RESULTS, { gameId })
     toast(t("game:resultRequestSentToast"))
   }
