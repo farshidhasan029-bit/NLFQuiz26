@@ -72,7 +72,7 @@ export const createDefaultGameSettings = (): GameSettings => ({
   answersOnly: false,
   detectScreenSplit: true,
   antiCheatMode: "kick",
-  antiCheatPenaltyPoints: 500,
+  antiCheatPenaltyPoints: 100,
   pauseOnDisconnect: true,
   hidePlayerResults: true,
   autoAdvance: {

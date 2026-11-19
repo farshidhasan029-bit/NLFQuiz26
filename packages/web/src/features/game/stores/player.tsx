@@ -64,7 +64,7 @@ const initialState: PlayerState<StatusDataMap> = {
   generatedUsernames: false,
   detectScreenSplit: true,
   antiCheatMode: "kick",
-  antiCheatPenaltyPoints: 500,
+  antiCheatPenaltyPoints: 100,
   hidePlayerResults: true,
   joinTicket: null,
   player: readStoredPlayer(),

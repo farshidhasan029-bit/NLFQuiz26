@@ -332,9 +332,10 @@ class Game {
   private playerLastPenaltyTime = new Map<string, number>()
 
   handleCheatingDetected(socket: Socket, reason?: string) {
-    if (this.isPlayerFinished(socket.id)) {
-      return
-    }
+    // Respect the host's anti-cheat toggle
+    if (!this._settings.detectScreenSplit) return
+    if (this.isPlayerFinished(socket.id)) return
+
     if (this._settings.antiCheatMode === "penalty") {
       this.penalizeCheater(socket, reason)
     } else {

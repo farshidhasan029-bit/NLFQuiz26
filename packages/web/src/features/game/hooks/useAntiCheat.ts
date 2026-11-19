@@ -11,30 +11,19 @@ interface AntiCheatOptions {
   mode?: AntiCheatMode
 }
 
-// 1. Width ratio: If the browser window takes less than 70% of available screen width,
-//    the user has tiled or snapped the window side-by-side with another app or browser.
+// If the window is narrower than 70% of the screen, it's split-screened
 const SPLIT_SCREEN_WIDTH_RATIO = 0.7
+// If the window is shorter than 60% of the screen, it's vertically split
+const SPLIT_SCREEN_HEIGHT_RATIO = 0.60
+// Idle time before we treat a hide as an auto-lock (not intentional switch)
+const AUTO_LOCK_IDLE_MS = 4000
+// Grace period before flagging an intentional switch as a violation
+const SWITCH_GRACE_MS = 4000
+// Cooldown between successive penalty reports (penalty mode only)
+const PENALTY_COOLDOWN_MS = 7000
 
-// 2. Height ratio: On mobile devices (and vertically tiled desktop windows),
-//    split-screen divides the screen top-and-bottom.
-//    Normal mobile browsing uses >= 78% of availHeight.
-//    In vertical split-screen, innerHeight / availHeight drops below 65%.
-const SPLIT_SCREEN_HEIGHT_RATIO = 0.65
-
-// 3. Auto-lock idle threshold:
-//    When a phone/device screen "waits and locks automatically", the user has stopped
-//    interacting with the screen for at least the display timeout (15s, 30s, 60s+).
-//    If the user has been idle for >= 3000ms when visibilitychange/blur/pagehide occurs,
-//    it is an automatic screen timeout / lock, NOT an intentional swipe to another app.
-const AUTO_LOCK_IDLE_THRESHOLD_MS = 3000
-
-// 4. Grace period for active app/tab switch before expulsion:
-//    Allows momentary interruptions (e.g. system notification banners, brief lock/unlock,
-//    incoming call prompt) without instantly and irreversibly expelling the user.
-const ACTIVE_SWITCH_GRACE_MS = 3000
-
-// States where anti-cheat is NOT active (pre-game, post-game, between-round waiting)
-const UNGUARDED_STATUSES: Set<Status> = new Set([
+// States where cheating detection is NOT active
+const UNGUARDED: Set<Status> = new Set([
   STATUS.SHOW_ROOM,
   STATUS.SHOW_START,
   STATUS.SHOW_PREPARED,
@@ -43,10 +32,9 @@ const UNGUARDED_STATUSES: Set<Status> = new Set([
   STATUS.WAIT,
 ])
 
-function isGuarded(statusName: Status | undefined, gameId: string | null): boolean {
-  if (!statusName) return false
-  if (UNGUARDED_STATUSES.has(statusName)) return false
-  // Don't guard if player has already submitted
+function isGuardedStatus(s: Status | undefined, gameId: string | null): boolean {
+  if (!s) return false
+  if (UNGUARDED.has(s)) return false
   if (typeof localStorage !== "undefined" && gameId) {
     if (localStorage.getItem(`quiz_submitted_${gameId}`) === "true") return false
   }
@@ -61,112 +49,109 @@ export const useAntiCheat = ({
 }: AntiCheatOptions) => {
   const { socket } = useSocket()
 
-  // Persistent refs — survive status transitions so we don't lose context
-  const reportedRef = useRef(false)
-  const lastViolationReportedAtRef = useRef(0)
-  const guardedSinceRef = useRef<number | null>(null)   // when we first entered a guarded state
+  // ── Persistent refs (survive status transitions) ──────────────────────────
+  const reportedRef        = useRef(false)              // kick mode: reported once
+  const lastPenaltyAtRef   = useRef(0)                  // penalty mode: cooldown
+  const guardedSinceRef    = useRef<number | null>(null) // when we entered guarded state
   const lastInteractionRef = useRef(Date.now())
-  const isScreenLockedRef = useRef(false)
-  const wakeGraceUntilRef = useRef(0)
-  const pendingSwitchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pendingBlurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const wakeLockRef = useRef<any>(null)
+  const isLockedRef        = useRef(false)              // device screen auto-locked
+  const wakeGraceUntilRef  = useRef(0)                  // grace after waking
+  const switchTimerRef     = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const blurTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const wakeLockRef        = useRef<any>(null)
+  // If the socket was offline when a violation fired, store it here and
+  // flush it the next time the socket reconnects and the page is visible.
+  const pendingViolationRef = useRef<string | null>(null)
 
-  // Keep latest values in refs so event callbacks always see current values
-  // without needing to be re-registered (avoids listener thrash on status change)
-  const enabledRef = useRef(enabled)
-  const gameIdRef = useRef(gameId)
-  const statusNameRef = useRef(statusName)
-  const modeRef = useRef(mode)
+  // Latest-value refs so event callbacks read current state without re-registering
+  const enabledRef    = useRef(enabled)
+  const gameIdRef     = useRef(gameId)
+  const statusRef     = useRef(statusName)
+  const modeRef       = useRef(mode)
 
-  useEffect(() => { enabledRef.current = enabled }, [enabled])
-  useEffect(() => { gameIdRef.current = gameId }, [gameId])
-  useEffect(() => { modeRef.current = mode }, [mode])
+  useEffect(() => { enabledRef.current    = enabled    }, [enabled])
+  useEffect(() => { gameIdRef.current     = gameId     }, [gameId])
+  useEffect(() => { modeRef.current       = mode       }, [mode])
 
-  // Track when we enter/leave guarded states — update guardedSinceRef
+  // Track guarded ↔ unguarded transitions
   useEffect(() => {
-    const guarded = isGuarded(statusName, gameId)
-    statusNameRef.current = statusName
+    statusRef.current = statusName
+    const guarded = isGuardedStatus(statusName, gameId)
 
     if (guarded && guardedSinceRef.current === null) {
-      // Just entered a guarded state for the first time (or after a gap)
-      guardedSinceRef.current = Date.now()
+      guardedSinceRef.current  = Date.now()
       lastInteractionRef.current = Date.now()
-      isScreenLockedRef.current = false
+      isLockedRef.current      = false
     } else if (!guarded) {
-      // Exited guarded state — clear the timer so we don't falsely fire
-      guardedSinceRef.current = null
-      if (pendingSwitchTimerRef.current) {
-        clearTimeout(pendingSwitchTimerRef.current)
-        pendingSwitchTimerRef.current = null
-      }
-      if (pendingBlurTimerRef.current) {
-        clearTimeout(pendingBlurTimerRef.current)
-        pendingBlurTimerRef.current = null
-      }
+      guardedSinceRef.current  = null
+      // Cancel any pending violation timer when leaving a guarded state
+      if (switchTimerRef.current) { clearTimeout(switchTimerRef.current); switchTimerRef.current = null }
+      if (blurTimerRef.current)   { clearTimeout(blurTimerRef.current);   blurTimerRef.current   = null }
     }
   }, [statusName, gameId])
 
-  // Main effect — register listeners ONCE per mount (not per status change)
+  // Main effect — register listeners ONCE per mount (not on every status change)
   useEffect(() => {
     if (!enabled || !gameId) return
 
-    // ── Wake Lock ─────────────────────────────────────────────────────────────
+    // ── Wake Lock ──────────────────────────────────────────────────────────
     const acquireWakeLock = async () => {
-      if (
-        typeof navigator === "undefined" ||
-        !("wakeLock" in navigator) ||
-        wakeLockRef.current
-      ) return
+      if (typeof navigator === "undefined" || !("wakeLock" in navigator) || wakeLockRef.current) return
       try {
         wakeLockRef.current = await (navigator as any).wakeLock.request("screen")
-        wakeLockRef.current.addEventListener("release", () => {
-          wakeLockRef.current = null
-        })
-      } catch {
-        // Ignored if rejected (e.g. battery saver)
-      }
+        wakeLockRef.current.addEventListener("release", () => { wakeLockRef.current = null })
+      } catch { /* battery saver / permission denied */ }
     }
 
     const releaseWakeLock = async () => {
-      if (wakeLockRef.current) {
-        try { await wakeLockRef.current.release() } catch { /* ignore */ }
-        wakeLockRef.current = null
-      }
+      if (!wakeLockRef.current) return
+      try { await wakeLockRef.current.release() } catch { /* ignore */ }
+      wakeLockRef.current = null
     }
 
     acquireWakeLock()
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // ── Core helpers ───────────────────────────────────────────────────────
     const currentlyGuarded = () =>
-      enabledRef.current && isGuarded(statusNameRef.current, gameIdRef.current)
+      enabledRef.current && isGuardedStatus(statusRef.current, gameIdRef.current)
+
+    const flushPendingViolation = () => {
+      const reason = pendingViolationRef.current
+      if (!reason || !socket.connected) return
+      if (!currentlyGuarded()) { pendingViolationRef.current = null; return }
+      pendingViolationRef.current = null
+      socket.emit(EVENTS.PLAYER.CHEATING_DETECTED, { gameId: gameIdRef.current, reason })
+    }
 
     const reportViolation = (reason: string) => {
       if (!currentlyGuarded()) return
 
       const mode = modeRef.current
       if (mode === "penalty") {
-        if (Date.now() - lastViolationReportedAtRef.current < 6000) return
+        if (Date.now() - lastPenaltyAtRef.current < PENALTY_COOLDOWN_MS) return
       } else {
         if (reportedRef.current) return
       }
 
-      // Never report if offline or socket disconnected
-      if (typeof navigator !== "undefined" && !navigator.onLine) return
-      if (!socket.connected) return
+      // Grace period after first entering guarded state (allow layout settle)
+      const since = guardedSinceRef.current
+      if (since === null || Date.now() - since < 1500) return
 
-      // Grace period after first entering a guarded state
-      const guardedSince = guardedSinceRef.current
-      if (guardedSince === null || Date.now() - guardedSince < 1500) return
-
-      // Grace period after waking up / unlocking screen
+      // Grace period after screen wake / unlock
       if (Date.now() < wakeGraceUntilRef.current) return
 
-      // Never report if device screen auto-locked
-      if (isScreenLockedRef.current) return
+      // Never report during an auto-lock
+      if (isLockedRef.current) return
+
+      // If the socket is offline (tab was hidden long enough to disconnect),
+      // store the violation and flush it once the socket reconnects.
+      if (!socket.connected) {
+        pendingViolationRef.current = reason
+        return
+      }
 
       if (mode === "penalty") {
-        lastViolationReportedAtRef.current = Date.now()
+        lastPenaltyAtRef.current = Date.now()
       } else {
         reportedRef.current = true
       }
@@ -174,233 +159,186 @@ export const useAntiCheat = ({
       socket.emit(EVENTS.PLAYER.CHEATING_DETECTED, { gameId: gameIdRef.current, reason })
     }
 
-    const isTypingInInput = () => {
+    const isTyping = () => {
       if (typeof document === "undefined") return false
-      const active = document.activeElement
-      if (!active) return false
-      const tag = active.tagName.toLowerCase()
-      return (
-        tag === "input" ||
-        tag === "textarea" ||
-        tag === "select" ||
-        (active as HTMLElement).isContentEditable
-      )
+      const el = document.activeElement
+      if (!el) return false
+      const tag = el.tagName.toLowerCase()
+      return tag === "input" || tag === "textarea" || tag === "select" || (el as HTMLElement).isContentEditable
     }
 
     const checkSplitScreen = () => {
       if (!currentlyGuarded()) return
-      if (isScreenLockedRef.current || Date.now() < wakeGraceUntilRef.current) return
+      if (isLockedRef.current || Date.now() < wakeGraceUntilRef.current) return
 
-      const screenWidth = window.screen.availWidth || window.screen.width
-      const screenHeight = window.screen.availHeight || window.screen.height
-      const windowWidth = window.innerWidth
-      const windowHeight = window.innerHeight
+      const sw = window.screen.availWidth  || window.screen.width
+      const sh = window.screen.availHeight || window.screen.height
 
-      if (screenWidth > 0) {
-        const widthRatio = windowWidth / screenWidth
-        if (widthRatio < SPLIT_SCREEN_WIDTH_RATIO) {
-          reportViolation("screen_split")
-          return
-        }
+      if (sw > 0 && window.innerWidth / sw < SPLIT_SCREEN_WIDTH_RATIO) {
+        reportViolation("screen_split"); return
       }
-
-      if (screenHeight > 0 && !isTypingInInput()) {
-        const heightRatio = windowHeight / screenHeight
-        if (heightRatio < SPLIT_SCREEN_HEIGHT_RATIO) {
-          reportViolation("screen_split")
-          return
-        }
+      if (sh > 0 && !isTyping() && window.innerHeight / sh < SPLIT_SCREEN_HEIGHT_RATIO) {
+        reportViolation("screen_split")
       }
     }
 
-    // ── Interaction tracking ──────────────────────────────────────────────────
-    const registerInteraction = () => {
-      lastInteractionRef.current = Date.now()
-    }
+    // ── Interaction tracking ───────────────────────────────────────────────
+    const onInteract = () => { lastInteractionRef.current = Date.now() }
 
-    const interactionEvents = [
+    const INTERACTION_EVENTS = [
       "touchstart", "touchmove", "touchend",
       "pointerdown", "mousedown", "keydown", "scroll",
     ] as const
 
-    interactionEvents.forEach((ev) =>
-      window.addEventListener(ev, registerInteraction, { passive: true, capture: true })
+    INTERACTION_EVENTS.forEach(ev =>
+      window.addEventListener(ev, onInteract, { passive: true, capture: true })
     )
 
-    // ── Periodic split-screen check ───────────────────────────────────────────
-    const intervalTimer = setInterval(() => {
-      if (!currentlyGuarded()) return
-      if (isScreenLockedRef.current) return
+    // ── Periodic checker ───────────────────────────────────────────────────
+    const intervalId = setInterval(() => {
+      if (!currentlyGuarded() || isLockedRef.current) return
       if (typeof document === "undefined") return
 
-      const idleTime = Date.now() - lastInteractionRef.current
+      const idle = Date.now() - lastInteractionRef.current
 
       if (document.visibilityState === "hidden") {
-        // Idle long enough → auto-lock, not cheating
-        if (idleTime >= AUTO_LOCK_IDLE_THRESHOLD_MS) {
-          isScreenLockedRef.current = true
-          return
-        }
-        // Not idle → still hidden after grace? → violation
-        if (!pendingSwitchTimerRef.current) {
-          reportViolation("tab_switch")
-        }
+        if (idle >= AUTO_LOCK_IDLE_MS) { isLockedRef.current = true; return }
+        if (!switchTimerRef.current)   { reportViolation("tab_switch") }
         return
       }
 
+      // Flush any violation that couldn't be sent while offline
+      flushPendingViolation()
       checkSplitScreen()
     }, 1500)
 
-    // ── Resize ────────────────────────────────────────────────────────────────
-    const handleResize = () => checkSplitScreen()
+    // ── Resize ─────────────────────────────────────────────────────────────
+    const onResize = () => checkSplitScreen()
 
-    // ── Blur ──────────────────────────────────────────────────────────────────
-    const handleBlur = () => {
+    // ── Blur ───────────────────────────────────────────────────────────────
+    const onBlur = () => {
       if (!currentlyGuarded()) return
-      const idleTime = Date.now() - lastInteractionRef.current
+      const idle = Date.now() - lastInteractionRef.current
 
-      if (idleTime >= AUTO_LOCK_IDLE_THRESHOLD_MS || isScreenLockedRef.current) {
-        isScreenLockedRef.current = true
-        return
+      if (idle >= AUTO_LOCK_IDLE_MS || isLockedRef.current) {
+        isLockedRef.current = true; return
       }
 
-      if (pendingBlurTimerRef.current) clearTimeout(pendingBlurTimerRef.current)
+      if (blurTimerRef.current) clearTimeout(blurTimerRef.current)
 
-      pendingBlurTimerRef.current = setTimeout(() => {
-        pendingBlurTimerRef.current = null
-        if (!currentlyGuarded()) return
-        if (isScreenLockedRef.current) return
-
-        const currentIdle = Date.now() - lastInteractionRef.current
-        if (currentIdle >= AUTO_LOCK_IDLE_THRESHOLD_MS) {
-          isScreenLockedRef.current = true
-          return
-        }
-
+      blurTimerRef.current = setTimeout(() => {
+        blurTimerRef.current = null
+        if (!currentlyGuarded() || isLockedRef.current) return
+        const nowIdle = Date.now() - lastInteractionRef.current
+        if (nowIdle >= AUTO_LOCK_IDLE_MS) { isLockedRef.current = true; return }
         if (typeof document === "undefined") return
         if (!document.hasFocus() || document.visibilityState === "hidden") {
-          reportViolation(
-            document.visibilityState === "hidden" ? "tab_switch" : "window_blur"
-          )
+          reportViolation(document.visibilityState === "hidden" ? "tab_switch" : "window_blur")
         }
-      }, ACTIVE_SWITCH_GRACE_MS)
+      }, SWITCH_GRACE_MS)
     }
 
-    // ── Focus ─────────────────────────────────────────────────────────────────
-    const handleFocus = () => {
-      if (pendingBlurTimerRef.current) {
-        clearTimeout(pendingBlurTimerRef.current)
-        pendingBlurTimerRef.current = null
-      }
-      if (pendingSwitchTimerRef.current) {
-        clearTimeout(pendingSwitchTimerRef.current)
-        pendingSwitchTimerRef.current = null
-      }
+    // ── Focus ──────────────────────────────────────────────────────────────
+    const onFocus = () => {
+      if (blurTimerRef.current)   { clearTimeout(blurTimerRef.current);   blurTimerRef.current   = null }
+      if (switchTimerRef.current) { clearTimeout(switchTimerRef.current); switchTimerRef.current = null }
 
-      isScreenLockedRef.current = false
+      isLockedRef.current        = false
       lastInteractionRef.current = Date.now()
-      wakeGraceUntilRef.current = Date.now() + 2500
+      wakeGraceUntilRef.current  = Date.now() + 2500
       acquireWakeLock()
+
+      // Flush pending violation now that socket should be reconnected
+      setTimeout(flushPendingViolation, 1000)
     }
 
-    // ── Visibility change ─────────────────────────────────────────────────────
-    const handleVisibilityChange = () => {
+    // ── Visibility change ──────────────────────────────────────────────────
+    const onVisibilityChange = () => {
       if (typeof document === "undefined") return
 
       if (document.visibilityState === "visible") {
-        if (pendingSwitchTimerRef.current) {
-          clearTimeout(pendingSwitchTimerRef.current)
-          pendingSwitchTimerRef.current = null
-        }
-        if (pendingBlurTimerRef.current) {
-          clearTimeout(pendingBlurTimerRef.current)
-          pendingBlurTimerRef.current = null
-        }
-        isScreenLockedRef.current = false
+        if (blurTimerRef.current)   { clearTimeout(blurTimerRef.current);   blurTimerRef.current   = null }
+        if (switchTimerRef.current) { clearTimeout(switchTimerRef.current); switchTimerRef.current = null }
+
+        isLockedRef.current        = false
         lastInteractionRef.current = Date.now()
-        wakeGraceUntilRef.current = Date.now() + 2500
+        wakeGraceUntilRef.current  = Date.now() + 2500
         acquireWakeLock()
+
+        // Give the socket ~1.5s to reconnect, then flush any stored violation
+        setTimeout(flushPendingViolation, 1500)
         return
       }
 
       if (!currentlyGuarded()) return
 
       if (document.visibilityState === "hidden") {
-        const idleTime = Date.now() - lastInteractionRef.current
+        const idle = Date.now() - lastInteractionRef.current
 
-        if (idleTime >= AUTO_LOCK_IDLE_THRESHOLD_MS) {
-          isScreenLockedRef.current = true
-          if (pendingSwitchTimerRef.current) {
-            clearTimeout(pendingSwitchTimerRef.current)
-            pendingSwitchTimerRef.current = null
-          }
+        // Auto-lock: user was idle → screen timed out by itself
+        if (idle >= AUTO_LOCK_IDLE_MS) {
+          isLockedRef.current = true
+          if (switchTimerRef.current) { clearTimeout(switchTimerRef.current); switchTimerRef.current = null }
           return
         }
 
-        if (!pendingSwitchTimerRef.current) {
-          pendingSwitchTimerRef.current = setTimeout(() => {
-            pendingSwitchTimerRef.current = null
-            if (
-              typeof document !== "undefined" &&
-              document.visibilityState === "hidden" &&
-              !isScreenLockedRef.current &&
-              currentlyGuarded()
-            ) {
+        // Active switch: schedule violation after grace period
+        if (!switchTimerRef.current) {
+          switchTimerRef.current = setTimeout(() => {
+            switchTimerRef.current = null
+            if (typeof document === "undefined") return
+            if (document.visibilityState === "hidden" && !isLockedRef.current && currentlyGuarded()) {
               reportViolation("tab_switch")
             }
-          }, ACTIVE_SWITCH_GRACE_MS)
+          }, SWITCH_GRACE_MS)
         }
       }
     }
 
-    // ── Page hide (mobile app switching) ──────────────────────────────────────
-    const handlePageHide = () => {
+    // ── Page hide (mobile app switching) ──────────────────────────────────
+    const onPageHide = () => {
       if (!currentlyGuarded()) return
-      const idleTime = Date.now() - lastInteractionRef.current
-      if (idleTime >= AUTO_LOCK_IDLE_THRESHOLD_MS || isScreenLockedRef.current) {
-        isScreenLockedRef.current = true
-        return
-      }
+      const idle = Date.now() - lastInteractionRef.current
+      if (idle >= AUTO_LOCK_IDLE_MS || isLockedRef.current) { isLockedRef.current = true; return }
 
-      if (!pendingSwitchTimerRef.current) {
-        pendingSwitchTimerRef.current = setTimeout(() => {
-          pendingSwitchTimerRef.current = null
-          if (!isScreenLockedRef.current && currentlyGuarded()) {
+      if (!switchTimerRef.current) {
+        switchTimerRef.current = setTimeout(() => {
+          switchTimerRef.current = null
+          if (!isLockedRef.current && currentlyGuarded()) {
             reportViolation("tab_switch")
           }
-        }, ACTIVE_SWITCH_GRACE_MS)
+        }, SWITCH_GRACE_MS)
       }
     }
 
-    // ── Register all listeners ────────────────────────────────────────────────
-    window.addEventListener("resize", handleResize)
-    window.addEventListener("blur", handleBlur)
-    window.addEventListener("focus", handleFocus)
-    document.addEventListener("visibilitychange", handleVisibilityChange)
-    window.addEventListener("pagehide", handlePageHide)
+    // ── Socket reconnect: flush pending violation ──────────────────────────
+    const onSocketConnect = () => {
+      setTimeout(flushPendingViolation, 500)
+    }
+
+    // ── Register ───────────────────────────────────────────────────────────
+    window.addEventListener("resize",           onResize)
+    window.addEventListener("blur",             onBlur)
+    window.addEventListener("focus",            onFocus)
+    window.addEventListener("pagehide",         onPageHide)
+    document.addEventListener("visibilitychange", onVisibilityChange)
+    socket.on("connect", onSocketConnect)
 
     return () => {
-      clearInterval(intervalTimer)
-      if (pendingSwitchTimerRef.current) {
-        clearTimeout(pendingSwitchTimerRef.current)
-        pendingSwitchTimerRef.current = null
-      }
-      if (pendingBlurTimerRef.current) {
-        clearTimeout(pendingBlurTimerRef.current)
-        pendingBlurTimerRef.current = null
-      }
-      interactionEvents.forEach((ev) =>
-        window.removeEventListener(ev, registerInteraction, { capture: true })
+      clearInterval(intervalId)
+      if (switchTimerRef.current) { clearTimeout(switchTimerRef.current); switchTimerRef.current = null }
+      if (blurTimerRef.current)   { clearTimeout(blurTimerRef.current);   blurTimerRef.current   = null }
+      INTERACTION_EVENTS.forEach(ev =>
+        window.removeEventListener(ev, onInteract, { capture: true })
       )
-      window.removeEventListener("resize", handleResize)
-      window.removeEventListener("blur", handleBlur)
-      window.removeEventListener("focus", handleFocus)
-      document.removeEventListener("visibilitychange", handleVisibilityChange)
-      window.removeEventListener("pagehide", handlePageHide)
+      window.removeEventListener("resize",             onResize)
+      window.removeEventListener("blur",               onBlur)
+      window.removeEventListener("focus",              onFocus)
+      window.removeEventListener("pagehide",           onPageHide)
+      document.removeEventListener("visibilitychange", onVisibilityChange)
+      socket.off("connect", onSocketConnect)
       releaseWakeLock()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, gameId, socket])
-  // Note: statusName and mode are intentionally NOT in deps — they're read via refs
-  // so listeners are registered only once and survive status transitions cleanly.
 }
