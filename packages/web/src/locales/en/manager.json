@@ -1,7 +1,6 @@
 {
   "configurationsTitle": "Configuration",
   "logout": "Logout",
-  "usernamePlaceholder": "Username",
   "passwordPlaceholder": "Password",
   "quizz": {
     "create": "Create Quizz",
@@ -60,8 +59,7 @@
     "play": "Play",
     "quizz": "Quizz",
     "results": "Results",
-    "backup": "Backup",
-    "hosts": "Hosts"
+    "backup": "Backup"
   },
   "backup": {
     "warningTitle": "Data is stored on the server",
@@ -78,15 +76,5 @@
     "restoring": "Restoring…",
     "restoreSuccess": "Restored {{quizzCount}} quiz(zes) and {{resultCount}} result(s).",
     "invalidFile": "Invalid backup file — please select a valid NLFQuiz backup JSON."
-  },
-  "hosts": {
-    "title": "Host Accounts",
-    "none": "No hosts created yet",
-    "addTitle": "Add New Host",
-    "createBtn": "Create Host",
-    "creating": "Creating...",
-    "created": "Host \"{{username}}\" created",
-    "deleted": "Host deleted",
-    "delete": "Delete host"
   }
 }

@@ -1,7 +1,6 @@
 {
   "configurationsTitle": "Yapılandırmalar",
   "logout": "Çıkış Yap",
-  "usernamePlaceholder": "Kullanıcı adı",
   "passwordPlaceholder": "Parola",
   "quizz": {
     "create": "Test Oluştur",
@@ -60,8 +59,7 @@
     "play": "Oyna",
     "quizz": "Test",
     "results": "Sonuçlar",
-    "backup": "Yedek",
-    "hosts": "Hostlar"
+    "backup": "Yedek"
   },
   "backup": {
     "warningTitle": "Veriler sunucuda saklanır",
@@ -78,15 +76,5 @@
     "restoring": "Geri yükleniyor…",
     "restoreSuccess": "{{quizzCount}} sınav ve {{resultCount}} sonuç geri yüklendi.",
     "invalidFile": "Geçersiz yedek dosyası."
-  },
-  "hosts": {
-    "title": "Host Hesaplari",
-    "none": "Henuz host olusturulmadi",
-    "addTitle": "Yeni Host Ekle",
-    "createBtn": "Host Olustur",
-    "creating": "Olusturuluyor...",
-    "created": "\"{{username}}\" host olusturuldu",
-    "deleted": "Host silindi",
-    "delete": "Hostu sil"
   }
 }

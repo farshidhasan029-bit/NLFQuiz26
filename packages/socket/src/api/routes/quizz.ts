@@ -19,12 +19,8 @@ import { StatusCodes } from "http-status-codes"
 const routes = apiFactory
   .createApp()
   .use(requireManager)
-  .get("/", (c) => {
-    const { claims } = c.var
-    return c.json({ quizz: getQuizzMeta(claims.sub) })
-  })
+  .get("/", (c) => c.json({ quizz: getQuizzMeta() }))
   .post("/import-document", async (c) => {
-    const { claims } = c.var
     const body = await c.req.parseBody()
     const file = body["file"]
     if (!file || typeof file === "string") {
@@ -53,7 +49,7 @@ const routes = apiFactory
         )
       }
 
-      const saved = saveQuizz(parsedQuizz, claims.sub)
+      const saved = saveQuizz(parsedQuizz)
 
       return c.json(
         {
@@ -63,7 +59,7 @@ const routes = apiFactory
         },
         StatusCodes.CREATED,
       )
-    } catch (err: unknown) {
+    } catch (err: any) {
       console.error("Document import error:", err)
       return c.json(
         { error: "errors:quizz.failedToParseDocument" },
@@ -71,21 +67,16 @@ const routes = apiFactory
       )
     }
   })
-  .get("/:id", (c) => {
-    const { claims } = c.var
-    return c.json(getQuizzById(c.req.param("id"), claims.sub))
-  })
-  .post("/", zValidator("json", quizzValidator, i18nHook), (c) => {
-    const { claims } = c.var
-    return c.json(saveQuizz(c.req.valid("json"), claims.sub), StatusCodes.CREATED)
-  })
-  .patch("/:id", zValidator("json", quizzValidator, i18nHook), (c) => {
-    const { claims } = c.var
-    return c.json(updateQuizz(c.req.param("id"), c.req.valid("json"), claims.sub))
-  })
+  .get("/:id", (c) => c.json(getQuizzById(c.req.param("id"))))
+  .post("/", zValidator("json", quizzValidator, i18nHook), (c) =>
+    c.json(saveQuizz(c.req.valid("json")), StatusCodes.CREATED),
+  )
+  .patch("/:id", zValidator("json", quizzValidator, i18nHook), (c) =>
+    c.json(updateQuizz(c.req.param("id"), c.req.valid("json"))),
+  )
   .delete("/:id", (c) => {
-    const { claims } = c.var
-    deleteQuizz(c.req.param("id"), claims.sub)
+    deleteQuizz(c.req.param("id"))
+
     return c.body(null, StatusCodes.NO_CONTENT)
   })
 

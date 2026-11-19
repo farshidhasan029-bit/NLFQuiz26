@@ -3,10 +3,9 @@ import { SESSION_ROLES } from "@razzia/common/constants"
 import type { SessionResponse } from "@razzia/common/types/auth"
 import {
   managerLoginValidator,
-  registerHostValidator,
   sessionRequestValidator,
 } from "@razzia/common/validators/auth"
-import { readClaims, requireManager } from "@razzia/socket/api/middleware"
+import { readClaims } from "@razzia/socket/api/middleware"
 import { i18nHook } from "@razzia/socket/api/validation"
 import { managerPassword } from "@razzia/socket/env"
 import {
@@ -15,13 +14,6 @@ import {
   verifyIgnoringExpiry,
   verifyToken,
 } from "@razzia/socket/services/auth"
-import {
-  createHost,
-  deleteHost,
-  findHostByUsername,
-  getHosts,
-} from "@razzia/socket/services/config"
-import bcrypt from "bcryptjs"
 import { Hono, type Context } from "hono"
 import { JwtTokenExpired } from "hono/utils/jwt/types"
 import { StatusCodes } from "http-status-codes"
@@ -82,33 +74,8 @@ const routes = new Hono()
     "/manager",
     zValidator("json", managerLoginValidator, i18nHook),
     async (c) => {
-      const { username, password } = c.req.valid("json")
+      const { password } = c.req.valid("json")
 
-      // ── Path A: Named host login (username + bcrypt password) ───────────────
-      if (username) {
-        const host = findHostByUsername(username)
-
-        if (!host) {
-          return c.json(
-            { error: "errors:manager.invalidCredentials" },
-            StatusCodes.FORBIDDEN,
-          )
-        }
-
-        const passwordMatch = await bcrypt.compare(password, host.passwordHash)
-
-        if (!passwordMatch) {
-          return c.json(
-            { error: "errors:manager.invalidCredentials" },
-            StatusCodes.FORBIDDEN,
-          )
-        }
-
-        // Use stable host.id as JWT sub so quizzes/results stay scoped to this host
-        return c.json(await mintToken(host.id, SESSION_ROLES.MANAGER))
-      }
-
-      // ── Path B: Legacy single-password fallback ──────────────────────────────
       if (!managerPassword) {
         return c.json(
           { error: "errors:manager.passwordNotConfigured" },
@@ -130,38 +97,6 @@ const routes = new Hono()
       )
     },
   )
-  // ── Host management endpoints (require manager JWT) ─────────────────────────
-  .post(
-    "/register-host",
-    requireManager,
-    zValidator("json", registerHostValidator, i18nHook),
-    async (c) => {
-      const { username, password } = c.req.valid("json")
-      const passwordHash = await bcrypt.hash(password, 10)
-
-      try {
-        const host = createHost(username, passwordHash)
-        return c.json({ id: host.id, username: host.username, createdAt: host.createdAt }, StatusCodes.CREATED)
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "errors:manager.usernameAlreadyExists"
-        return c.json({ error: message }, StatusCodes.CONFLICT)
-      }
-    },
-  )
-  .get("/hosts", requireManager, (c) => {
-    const hosts = getHosts().map(({ id, username, createdAt }) => ({ id, username, createdAt }))
-    return c.json({ hosts })
-  })
-  .delete("/hosts/:hostId", requireManager, (c) => {
-    const { hostId } = c.req.param()
-
-    try {
-      deleteHost(hostId)
-      return c.body(null, StatusCodes.NO_CONTENT)
-    } catch {
-      return c.json({ error: "errors:manager.hostNotFound" }, StatusCodes.NOT_FOUND)
-    }
-  })
   .post("/logout", async (c) => {
     const claims = await readClaims(c)
 

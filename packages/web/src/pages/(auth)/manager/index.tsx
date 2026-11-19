@@ -30,12 +30,7 @@ const ManagerAuthPage = () => {
     },
   })
 
-  return (
-    <ManagerPassword
-      onSubmit={({ username, password }) => mutate({ username, password })}
-      disabled={isPending}
-    />
-  )
+  return <ManagerPassword onSubmit={mutate} disabled={isPending} />
 }
 
 export const Route = createFileRoute("/(auth)/manager/")({

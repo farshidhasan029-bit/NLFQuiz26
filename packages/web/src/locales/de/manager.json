@@ -1,7 +1,6 @@
 {
   "configurationsTitle": "Konfigurationen",
   "logout": "Abmelden",
-  "usernamePlaceholder": "Benutzername",
   "passwordPlaceholder": "Passwort",
   "quizz": {
     "create": "Quiz erstellen",
@@ -60,8 +59,7 @@
     "play": "Spielen",
     "quizz": "Quiz",
     "results": "Ergebnisse",
-    "backup": "Backup",
-    "hosts": "Hosts"
+    "backup": "Backup"
   },
   "backup": {
     "warningTitle": "Daten werden auf dem Server gespeichert",
@@ -78,15 +76,5 @@
     "restoring": "Wiederherstelle…",
     "restoreSuccess": "{{quizzCount}} Quiz und {{resultCount}} Ergebnis(se) wiederhergestellt.",
     "invalidFile": "Ungültige Backup-Datei."
-  },
-  "hosts": {
-    "title": "Host-Konten",
-    "none": "Noch keine Hosts erstellt",
-    "addTitle": "Neuen Host hinzufügen",
-    "createBtn": "Host erstellen",
-    "creating": "Erstelle...",
-    "created": "Host \"{{username}}\" erstellt",
-    "deleted": "Host gelöscht",
-    "delete": "Host löschen"
   }
 }

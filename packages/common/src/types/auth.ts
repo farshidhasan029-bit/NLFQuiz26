@@ -24,10 +24,3 @@ export interface JoinTicketClaims {
   iat: number
   exp: number
 }
-
-export interface HostAccount {
-  id: string
-  username: string
-  passwordHash: string
-  createdAt: string
-}

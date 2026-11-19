@@ -683,14 +683,6 @@ class Game {
       for (const player of away) {
         this.removePlayer(player.id)
       }
-
-      // Auto-lock when game starts so no new participants can join mid-game.
-      // Self-paced quizzes are excluded — they're designed to allow late joiners.
-      // The host can manually unlock via the lock button if they want to allow late joins.
-      if (!this._locked && !this._settings.selfPaced) {
-        this._locked = true
-        this.io.to(this._manager.id).emit(EVENTS.MANAGER.LOCK_UPDATED, true)
-      }
     }
 
     await this.round.start(socket)

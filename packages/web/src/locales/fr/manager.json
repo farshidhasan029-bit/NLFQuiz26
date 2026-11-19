@@ -1,7 +1,6 @@
 {
   "configurationsTitle": "Configurations",
   "logout": "Déconnexion",
-  "usernamePlaceholder": "Nom d'utilisateur",
   "passwordPlaceholder": "Mot de passe",
   "quizz": {
     "create": "Créer un quizz",
@@ -60,8 +59,7 @@
     "play": "Jouer",
     "quizz": "Quizz",
     "results": "Résultats",
-    "backup": "Sauvegarde",
-    "hosts": "Hotes"
+    "backup": "Sauvegarde"
   },
   "backup": {
     "warningTitle": "Les données sont stockées sur le serveur",
@@ -78,15 +76,5 @@
     "restoring": "Restauration…",
     "restoreSuccess": "{{quizzCount}} quiz et {{resultCount}} résultat(s) restaurés.",
     "invalidFile": "Fichier de sauvegarde invalide."
-  },
-  "hosts": {
-    "title": "Comptes hotes",
-    "none": "Aucun hote cree pour instant",
-    "addTitle": "Ajouter un nouvel hote",
-    "createBtn": "Creer un hote",
-    "creating": "Creation...",
-    "created": "Hote \"{{username}}\" cree",
-    "deleted": "Hote supprime",
-    "delete": "Supprimer hote"
   }
 }
