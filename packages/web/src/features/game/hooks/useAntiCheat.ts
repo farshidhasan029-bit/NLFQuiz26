@@ -50,13 +50,20 @@ export const useAntiCheat = ({
   const pendingBlurTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const wakeLockRef = useRef<any>(null)
 
+  const isSubmitted =
+    typeof localStorage !== "undefined" && gameId
+      ? localStorage.getItem(`quiz_submitted_${gameId}`) === "true"
+      : false
+
   // Guard all active quiz states where participants answer questions or view rounds
-  // Exclude only the initial room/lobby before start, and the end screens
+  // Exclude initial room/lobby, end screens, waiting screens, and submitted state
   const isGuardedState = Boolean(
-    statusName &&
+    !isSubmitted &&
+      statusName &&
       statusName !== STATUS.SHOW_ROOM &&
       statusName !== STATUS.FINISHED &&
-      statusName !== STATUS.SUMMARY,
+      statusName !== STATUS.SUMMARY &&
+      statusName !== STATUS.WAIT,
   )
 
   useEffect(() => {

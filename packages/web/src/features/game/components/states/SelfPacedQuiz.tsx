@@ -38,7 +38,12 @@ const SelfPacedQuiz = ({ data: { questions } }: Props) => {
 
   const [answers, setAnswers] = useState<Map<number, number[]>>(new Map())
   const [submitConfirmOpen, setSubmitConfirmOpen] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(() => {
+    if (typeof localStorage !== "undefined" && gameId) {
+      return localStorage.getItem(`quiz_submitted_${gameId}`) === "true"
+    }
+    return false
+  })
 
   const total = questions.length
   const answeredCount = answers.size
@@ -102,6 +107,9 @@ const SelfPacedQuiz = ({ data: { questions } }: Props) => {
     triggerHaptic(HAPTIC_PATTERNS.SUCCESS)
     setSubmitConfirmOpen(false)
     setIsSubmitted(true)
+    if (typeof localStorage !== "undefined" && gameId) {
+      localStorage.setItem(`quiz_submitted_${gameId}`, "true")
+    }
     if (socket && gameId) {
       socket.emit(EVENTS.PLAYER.SUBMIT_QUIZ, { gameId })
     }

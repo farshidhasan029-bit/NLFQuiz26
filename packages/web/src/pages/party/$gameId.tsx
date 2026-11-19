@@ -145,6 +145,10 @@ const PlayerGamePage = () => {
 
   useEvent(EVENTS.GAME.STATUS, ({ name, data }) => {
     if (name in GAME_STATE_COMPONENTS) {
+      // Clear submitted flag when game is fully over
+      if (name === STATUS.FINISHED && gameIdParam) {
+        localStorage.removeItem(`quiz_submitted_${gameIdParam}`)
+      }
       const dataObj = data as
         | {
             detectScreenSplit?: boolean
@@ -203,6 +207,7 @@ const PlayerGamePage = () => {
   useEvent(EVENTS.GAME.RESET, (message) => {
     localStorage.removeItem("game_pin")
     localStorage.removeItem("game_id")
+    if (gameIdParam) localStorage.removeItem(`quiz_submitted_${gameIdParam}`)
     navigate({ to: "/" })
     resetPlayer()
     setQuestionStates(null)

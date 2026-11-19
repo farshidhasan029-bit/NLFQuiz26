@@ -74,6 +74,8 @@ export class RoundManager {
   private readonly opts: RoundManagerOptions
   private readonly steps: RoundStep[]
   private started = false
+  private hasEverStarted = false
+  private finished = false
   private currentQuestion = 0
   private currentStep = -1
   private playersAnswers: Answer[] = []
@@ -210,6 +212,26 @@ export class RoundManager {
 
   isStarted(): boolean {
     return this.started
+  }
+
+  hasStarted(): boolean {
+    return this.hasEverStarted
+  }
+
+  isFinished(): boolean {
+    return this.finished
+  }
+
+  isPlayerFinished(playerId: string): boolean {
+    if (this.finished) {
+      return true
+    }
+    const state = this.playerPacedMap.get(playerId)
+    return Boolean(state?.finished)
+  }
+
+  getSubject(): string {
+    return this.opts.quizz.subject
   }
 
   private get question(): Question {
@@ -358,6 +380,8 @@ export class RoundManager {
     }
 
     this.started = true
+    this.hasEverStarted = true
+    this.finished = false
     this.startUltimateTimer()
 
     this.opts.broadcast(STATUS.SHOW_START, {
@@ -765,6 +789,7 @@ export class RoundManager {
 
   private finish(): void {
     this.started = false
+    this.finished = true
     this.clearAutoAdvance()
     this.clearUltimateTimer()
 

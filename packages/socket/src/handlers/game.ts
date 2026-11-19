@@ -25,7 +25,7 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
       registry.markGameAsEmpty(game)
     }
 
-    if (!game.started) {
+    if (!game.hasStarted) {
       closeLobby(game)
     }
   }
@@ -36,13 +36,13 @@ export const gameSocketHandlers = ({ io, socket }: SocketContext) => {
       registry.markGameAsEmpty(game)
     }
 
-    if (!game.started) {
+    if (!game.hasStarted) {
       game.waitForManager(() => closeLobby(game))
     }
   }
 
   const handlePlayerLeave = (game: Game) => {
-    if (!game.started) {
+    if (!game.hasStarted) {
       const player = game.removePlayer(socket.id)
 
       if (player) {

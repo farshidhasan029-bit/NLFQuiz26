@@ -15,7 +15,23 @@ const Wait = ({ data: { text } }: Props) => {
 
   return (
     <section className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center px-4">
-      {isWaitHost ? (
+      {text === "game:quizSubmittedWait" ? (
+        <div className="flex flex-col items-center text-center">
+          <div className="relative mb-6 flex size-28 items-center justify-center rounded-3xl bg-emerald-500/20 border border-emerald-400/40 shadow-2xl backdrop-blur-md animate-pulse">
+            <CheckCircle2 className="size-16 text-emerald-400 drop-shadow-md" />
+          </div>
+          <h2 className="text-center text-3xl font-extrabold text-white drop-shadow-lg md:text-5xl">
+            {t("game:quizSubmittedTitle", "Quiz Submitted!")}
+          </h2>
+          <p className="mt-4 max-w-md text-center text-lg font-medium text-white/90 md:text-xl drop-shadow">
+            {t("game:quizSubmittedWait")}
+          </p>
+          <div className="mt-8 flex items-center gap-2.5 rounded-full bg-black/40 px-5 py-2.5 text-sm font-semibold text-emerald-300 border border-emerald-400/20 shadow-lg">
+            <span className="inline-block size-2.5 rounded-full bg-emerald-400 animate-ping" />
+            <span>{t("game:quizSubmittedWait")}</span>
+          </div>
+        </div>
+      ) : isWaitHost ? (
         <div className="flex flex-col items-center text-center">
           <div className="relative mb-6 flex size-28 items-center justify-center rounded-3xl bg-indigo-600/30 backdrop-blur-md border border-indigo-400/40 shadow-2xl animate-pulse">
             <CheckCircle2 className="size-16 text-emerald-400 drop-shadow-md" />

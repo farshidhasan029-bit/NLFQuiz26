@@ -129,6 +129,22 @@ class Game {
     return this.round.isStarted()
   }
 
+  get hasStarted(): boolean {
+    return this.round.hasStarted()
+  }
+
+  get isFinished(): boolean {
+    return this.round.isFinished()
+  }
+
+  isPlayerFinished(socketId: string): boolean {
+    return this.round.isPlayerFinished(socketId)
+  }
+
+  get quizzSubject(): string {
+    return this.round.getSubject()
+  }
+
   get settings(): GameSettings {
     return this._settings
   }
@@ -309,6 +325,9 @@ class Game {
   private playerLastPenaltyTime = new Map<string, number>()
 
   handleCheatingDetected(socket: Socket, reason?: string) {
+    if (this.isPlayerFinished(socket.id)) {
+      return
+    }
     if (this._settings.antiCheatMode === "penalty") {
       this.penalizeCheater(socket, reason)
     } else {
@@ -491,18 +510,33 @@ class Game {
       this.io.in(oldSocketId).disconnectSockets(true)
     }
 
-    const status = this.playerStatus.get(oldSocketId) ??
+    // Migrate playerStatus from old socket ID to new one BEFORE reading it
+    const oldStatus = this.playerStatus.get(oldSocketId)
+    if (oldStatus) {
+      this.playerStatus.delete(oldSocketId)
+      this.playerStatus.set(socket.id, oldStatus)
+    }
+
+    let status: { name: Status; data: StatusDataMap[Status] } =
+      this.playerStatus.get(socket.id) ??
       this.lastBroadcastStatus ?? {
         name: STATUS.WAIT,
         data: { text: "game:waitingForPlayers" },
       }
 
-    const oldStatus = this.playerStatus.get(oldSocketId)
-
-    if (oldStatus) {
-      this.playerStatus.delete(oldSocketId)
-      this.playerStatus.set(socket.id, oldStatus)
+    if (this.round.isFinished()) {
+      status = this.lastBroadcastStatus ?? {
+        name: STATUS.FINISHED,
+        data: { subject: this.quizzSubject, top: [] },
+      }
+    } else if (this.round.isPlayerFinished(socket.id)) {
+      status = {
+        name: STATUS.WAIT,
+        data: { text: "game:quizSubmittedWait" },
+      }
     }
+
+    this.playerStatus.set(socket.id, status)
 
     socket.emit(EVENTS.PLAYER.SUCCESS_RECONNECT, {
       gameId: this.gameId,
