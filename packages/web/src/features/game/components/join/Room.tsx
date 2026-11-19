@@ -15,7 +15,9 @@ const Room = () => {
   const { updatePlayer } = usePlayerStore()
   const [invitation, setInvitation] = useState("")
   const { pin } = useSearch({ from: "/(auth)/" })
-  const hasCheckedRef = useRef(false)
+  // Store the last pin value that was auto-checked so we don't double-fire,
+  // but also re-fire if the pin changes (e.g. different QR scan).
+  const checkedPinRef = useRef<string | null>(null)
   const { t } = useTranslation()
 
   const { mutate: check, isPending } = useMutation({
@@ -36,11 +38,10 @@ const Room = () => {
   }
 
   useEffect(() => {
-    if (!pin || hasCheckedRef.current) {
-      return
-    }
-
-    hasCheckedRef.current = true
+    // Auto-join when ?pin= is in the URL (e.g. from a QR code scan).
+    // Track by value so a new QR code (different pin) is always re-checked.
+    if (!pin || checkedPinRef.current === pin) return
+    checkedPinRef.current = pin
     check(pin)
   }, [pin, check])
 
