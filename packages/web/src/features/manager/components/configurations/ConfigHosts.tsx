@@ -50,7 +50,7 @@ const ConfigHosts = () => {
     <div className="flex flex-col gap-4 py-2">
       {/* Existing hosts */}
       <div className="rounded-xl border p-4 flex flex-col gap-3">
-        <h3 className="text-sm font-semibold flex items-center gap-1.5">
+        <h3 className="text-sm font-semibold flex items-center gap-1.5 text-primary">
           <Users className="size-4" />
           {t("manager:hosts.title")}
         </h3>
@@ -81,7 +81,7 @@ const ConfigHosts = () => {
 
       {/* Create new host */}
       <div className="rounded-xl border p-4 flex flex-col gap-2">
-        <h3 className="text-sm font-semibold flex items-center gap-1.5">
+        <h3 className="text-sm font-semibold flex items-center gap-1.5 text-primary">
           <UserPlus className="size-4" />
           {t("manager:hosts.addTitle")}
         </h3>
