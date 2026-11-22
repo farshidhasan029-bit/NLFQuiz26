@@ -86,6 +86,15 @@ const ManagerGamePage = () => {
     updateManager({ locked })
   })
 
+  useEvent(EVENTS.MANAGER.PLAYER_CHEAT_DETECTED, ({ username, reason, mode }: { username: string; reason: string; mode: string }) => {
+    const action = reason === "screen_split" ? "split their screen" : "switched tabs"
+    const consequence = mode === "penalty" ? "(-100 marks)" : "(will be kicked)"
+    toast.error(`🚨 ${username} tried to cheat — ${action} ${consequence}`, {
+      duration: 10000,
+      id: `cheat-${username}-${Date.now()}`,
+    })
+  })
+
   useEvent(EVENTS.MANAGER.PLAYER_EXPELLED, ({ username }: { username: string }) => {
     toast.error(`🚨 ${t("game:antiCheat.managerAlert", { username })}`, {
       duration: 10000,
