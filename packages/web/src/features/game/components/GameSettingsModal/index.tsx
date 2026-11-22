@@ -16,6 +16,8 @@ import { useManagerStore } from "@razzia/web/features/game/stores/manager"
 import { updateGameSettings } from "@razzia/web/features/manager/queries"
 import { ApiError } from "@razzia/web/lib/api"
 import { useMutation } from "@tanstack/react-query"
+import { useNavigate, useParams } from "@tanstack/react-router"
+import { StatusCodes } from "http-status-codes"
 import { Settings, X } from "lucide-react"
 import { Dialog } from "radix-ui"
 import { useState } from "react"
@@ -24,7 +26,11 @@ import toast from "react-hot-toast"
 import { useTranslation } from "react-i18next"
 
 const GameSettingsModal = () => {
-  const { gameId, settings, updateManager } = useManagerStore()
+  const { gameId: storeGameId, settings, updateManager, resetManager } = useManagerStore()
+  const navigate = useNavigate()
+  // Fall back to URL param when the store gameId is null (e.g. page refresh)
+  const { gameId: urlGameId } = useParams({ strict: false }) as { gameId?: string }
+  const gameId = storeGameId ?? urlGameId ?? null
   const [open, setOpen] = useState(false)
   const { t } = useTranslation()
 
@@ -40,10 +46,19 @@ const GameSettingsModal = () => {
       form.reset(saved)
       setOpen(false)
     },
-    onError: (error) =>
+    onError: (error) => {
+      // Game expired on server (Render restart / session mismatch) → send manager back to config
+      if (error instanceof ApiError && error.status === StatusCodes.NOT_FOUND) {
+        setOpen(false)
+        toast.error(t("errors:game.notFound"))
+        resetManager()
+        navigate({ to: "/manager/config" })
+        return
+      }
       toast.error(
         t(error instanceof ApiError ? error.key : "errors:route.description"),
-      ),
+      )
+    },
   })
 
   const handleOpenChange = (next: boolean) => {

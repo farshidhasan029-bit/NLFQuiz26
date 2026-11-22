@@ -86,9 +86,10 @@ const ManagerGamePage = () => {
     updateManager({ locked })
   })
 
-  useEvent(EVENTS.MANAGER.PLAYER_EXPELLED, ({ username }) => {
-    toast.error(t("game:antiCheat.managerAlert", { username }), {
-      duration: 5000,
+  useEvent(EVENTS.MANAGER.PLAYER_EXPELLED, ({ username }: { username: string }) => {
+    toast.error(`🚨 ${t("game:antiCheat.managerAlert", { username })}`, {
+      duration: 10000,
+      id: `expelled-${username}-${Date.now()}`,
     })
   })
 
@@ -102,12 +103,13 @@ const ManagerGamePage = () => {
       penaltyPoints: number
     }) => {
       toast.error(
-        t("game:antiCheat.managerPenaltyAlert", {
+        `⚠️ ${t("game:antiCheat.managerPenaltyAlert", {
           username,
           penaltyPoints,
-        }),
+        })}`,
         {
-          duration: 5000,
+          duration: 10000,
+          id: `penalty-${username}-${Date.now()}`,
         },
       )
     },
