@@ -57,7 +57,6 @@ export const useAntiCheat = ({
   const guardedSinceRef    = useRef<number | null>(null) // when we entered guarded state
   const returnGraceUntilRef = useRef(0)                 // grace after returning to tab
   const blurTimerRef       = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const wakeLockRef        = useRef<any>(null)
   // If the socket was offline when a violation fired, store it here and
   // flush it the next time the socket reconnects and the page is visible.
   const pendingViolationRef = useRef<string | null>(null)
@@ -88,23 +87,6 @@ export const useAntiCheat = ({
   // Main effect — register listeners ONCE per mount (not on every status change)
   useEffect(() => {
     if (!enabled || !gameId) return
-
-    // ── Wake Lock ──────────────────────────────────────────────────────────
-    const acquireWakeLock = async () => {
-      if (typeof navigator === "undefined" || !("wakeLock" in navigator) || wakeLockRef.current) return
-      try {
-        wakeLockRef.current = await (navigator as any).wakeLock.request("screen")
-        wakeLockRef.current.addEventListener("release", () => { wakeLockRef.current = null })
-      } catch { /* battery saver / permission denied */ }
-    }
-
-    const releaseWakeLock = async () => {
-      if (!wakeLockRef.current) return
-      try { await wakeLockRef.current.release() } catch { /* ignore */ }
-      wakeLockRef.current = null
-    }
-
-    acquireWakeLock()
 
     // ── Core helpers ───────────────────────────────────────────────────────
     const currentlyGuarded = () =>
@@ -226,7 +208,6 @@ export const useAntiCheat = ({
       if (blurTimerRef.current) { clearTimeout(blurTimerRef.current); blurTimerRef.current = null }
 
       returnGraceUntilRef.current = Date.now() + RETURN_GRACE_MS
-      acquireWakeLock()
 
       // Flush pending violation now that socket should be reconnected
       setTimeout(flushPendingViolation, 1000)
@@ -240,7 +221,6 @@ export const useAntiCheat = ({
         if (blurTimerRef.current) { clearTimeout(blurTimerRef.current); blurTimerRef.current = null }
 
         returnGraceUntilRef.current = Date.now() + RETURN_GRACE_MS
-        acquireWakeLock()
 
         // Give the socket ~1.5s to reconnect, then flush any stored violation
         setTimeout(flushPendingViolation, 1500)
@@ -283,7 +263,6 @@ export const useAntiCheat = ({
       window.removeEventListener("pagehide",           onPageHide)
       document.removeEventListener("visibilitychange", onVisibilityChange)
       socket.off("connect", onSocketConnect)
-      releaseWakeLock()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, gameId, socket])

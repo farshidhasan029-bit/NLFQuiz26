@@ -16,6 +16,7 @@ import {
 } from "@razzia/web/features/game/utils/constants"
 import { createStatus } from "@razzia/web/features/game/utils/createStatus"
 import { useAntiCheat } from "@razzia/web/features/game/hooks/useAntiCheat"
+import { useWakeLock } from "@razzia/web/features/game/hooks/useWakeLock"
 import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router"
 import { useEffect, useRef } from "react"
 import toast from "react-hot-toast"
@@ -31,6 +32,7 @@ const PlayerGamePage = () => {
   const syncedRef = useRef(false)
 
   useSocketConnection()
+  useWakeLock()
   useAntiCheat({
     enabled: detectScreenSplit,
     gameId: gameIdParam,
