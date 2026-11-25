@@ -74,6 +74,9 @@ const Answers = ({
     setPendingAnswer(answerKeys)
     triggerHaptic(HAPTIC_PATTERNS.LOCK)
 
+    // Mark that this player has answered the current question (for redirect-on-return logic)
+    sessionStorage.setItem(`answered_${gameId}`, "true")
+
     socket.emit(EVENTS.PLAYER.SELECTED_ANSWER, {
       gameId,
       data: {

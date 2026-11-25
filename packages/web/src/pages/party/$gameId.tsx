@@ -67,6 +67,21 @@ const PlayerGamePage = () => {
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
+        const { status: currentStatus } = usePlayerStore.getState()
+
+        // If participant answered and left during the answering phase → boot to pincode
+        if (
+          currentStatus?.name === STATUS.SELECT_ANSWER &&
+          gameIdParam &&
+          sessionStorage.getItem(`answered_${gameIdParam}`) === "true"
+        ) {
+          sessionStorage.removeItem(`answered_${gameIdParam}`)
+          resetPlayer()
+          setQuestionStates(null)
+          navigate({ to: "/" })
+          return
+        }
+
         if (!socket.connected) {
           socket.connect()
         } else if (gameIdParam && !usePlayerStore.getState().joinTicket) {
@@ -80,7 +95,7 @@ const PlayerGamePage = () => {
       document.removeEventListener("visibilitychange", handleVisibility)
       window.removeEventListener("focus", handleVisibility)
     }
-  }, [socket, gameIdParam])
+  }, [socket, gameIdParam, navigate, resetPlayer, setQuestionStates])
 
   useEvent(
     EVENTS.GAME.SUCCESS_JOIN,
@@ -152,6 +167,10 @@ const PlayerGamePage = () => {
         localStorage.removeItem(`quiz_submitted_${gameIdParam}`)
         // Don't clear eval_status/eval_data here — player may still want to view their evaluation
       }
+      // Clear answered flag when question phase ends (new question or reveal)
+      if (name !== STATUS.SELECT_ANSWER && gameIdParam) {
+        sessionStorage.removeItem(`answered_${gameIdParam}`)
+      }
       const dataObj = data as
         | {
             detectScreenSplit?: boolean
@@ -214,6 +233,7 @@ const PlayerGamePage = () => {
       localStorage.removeItem(`quiz_submitted_${gameIdParam}`)
       localStorage.removeItem(`eval_status_${gameIdParam}`)
       localStorage.removeItem(`eval_data_${gameIdParam}`)
+      sessionStorage.removeItem(`answered_${gameIdParam}`)
     }
     navigate({ to: "/" })
     resetPlayer()
