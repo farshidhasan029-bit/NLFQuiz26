@@ -29,8 +29,9 @@ const GameSettingsModal = () => {
   const { gameId: storeGameId, settings, updateManager, resetManager } = useManagerStore()
   const navigate = useNavigate()
   // Fall back to URL param when the store gameId is null (e.g. page refresh)
-  const { gameId: urlGameId } = useParams({ strict: false }) as { gameId?: string }
-  const gameId = storeGameId ?? urlGameId ?? null
+  // useParams may return undefined on routes without params — default to {}
+  const params = (useParams({ strict: false }) ?? {}) as { gameId?: string }
+  const gameId = storeGameId ?? params.gameId ?? null
   const [open, setOpen] = useState(false)
   const { t } = useTranslation()
 
