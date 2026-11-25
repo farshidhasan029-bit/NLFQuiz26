@@ -60,7 +60,8 @@
       "modePenalty": "নেগেটিভ মার্কিং (নম্বর কর্তন)",
       "modePenaltyHint": "অসদুপায় অবলম্বন ধরা পড়লে নম্বর কেটে নেওয়া হবে",
       "penaltyPoints": "কর্তনকৃত নম্বর (pts)",
-      "penaltyPointsHint": "প্রতিবার অসদুপায়ের জন্য কেটে নেওয়া নম্বর"
+      "penaltyPointsHint": "প্রতিবার অসদুপায়ের জন্য কেটে নেওয়া নম্বর",
+      "hostKickHint": "Notifies you when a participant cheats — you decide whether to kick them"
     },
     "title": "গেম সেটিংস",
     "hidePlayerResults": {

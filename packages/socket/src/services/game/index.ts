@@ -341,20 +341,13 @@ class Game {
       this.playerManager.findById(socket.id) ||
       (clientId ? this.playerManager.findByClientId(clientId) : undefined)
 
-    // Always notify the manager about the cheat attempt, regardless of mode
+    // Notify the host — the host decides whether to kick the participant
     if (player) {
       this.io.to(this._manager.id).emit(EVENTS.MANAGER.PLAYER_CHEAT_DETECTED, {
         playerId: player.id,
         username: player.username,
         reason: reason || "tab_switch",
-        mode: this._settings.antiCheatMode,
       })
-    }
-
-    if (this._settings.antiCheatMode === "penalty") {
-      this.penalizeCheater(socket, reason)
-    } else {
-      this.expelCheater(socket, reason)
     }
   }
 

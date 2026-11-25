@@ -88,43 +88,60 @@ const ManagerGamePage = () => {
     updateManager({ locked })
   })
 
-  useEvent(EVENTS.MANAGER.PLAYER_CHEAT_DETECTED, ({ username, reason, mode }: { username: string; reason: string; mode: string }) => {
+  useEvent(EVENTS.MANAGER.PLAYER_CHEAT_DETECTED, ({ username, reason, playerId }: { username: string; reason: string; playerId: string }) => {
     const action = reason === "screen_split" ? "split their screen" : "switched tabs"
-    const consequence = mode === "penalty" ? "(-100 marks)" : "(will be kicked)"
-    toast.error(`🚨 ${username} tried to cheat — ${action} ${consequence}`, {
-      duration: 10000,
-      id: `cheat-${username}-${Date.now()}`,
-    })
+    const toastId = `cheat-${playerId}-${Date.now()}`
+    toast(
+      (toastInstance) => (
+        <div style={{ display: "flex", flexDirection: "column", gap: "6px", minWidth: "220px" }}>
+          <div style={{ fontWeight: 700, fontSize: "14px" }}>🚨 Cheat detected</div>
+          <div style={{ fontSize: "13px", color: "#555" }}>
+            <strong>{username}</strong> {action}
+          </div>
+          <div style={{ display: "flex", gap: "8px", marginTop: "4px" }}>
+            <button
+              onClick={() => {
+                socket.emit(EVENTS.MANAGER.KICK_PLAYER, { gameId, playerId })
+                toast.dismiss(toastInstance.id)
+              }}
+              style={{
+                background: "#ef4444",
+                color: "#fff",
+                border: "none",
+                borderRadius: "6px",
+                padding: "4px 14px",
+                fontWeight: 700,
+                fontSize: "13px",
+                cursor: "pointer",
+              }}
+            >
+              Kick
+            </button>
+            <button
+              onClick={() => toast.dismiss(toastInstance.id)}
+              style={{
+                background: "#e5e7eb",
+                color: "#374151",
+                border: "none",
+                borderRadius: "6px",
+                padding: "4px 14px",
+                fontWeight: 600,
+                fontSize: "13px",
+                cursor: "pointer",
+              }}
+            >
+              Ignore
+            </button>
+          </div>
+        </div>
+      ),
+      {
+        duration: 15000,
+        id: toastId,
+        style: { maxWidth: "320px" },
+      },
+    )
   })
-
-  useEvent(EVENTS.MANAGER.PLAYER_EXPELLED, ({ username }: { username: string }) => {
-    toast.error(`🚨 ${t("game:antiCheat.managerAlert", { username })}`, {
-      duration: 10000,
-      id: `expelled-${username}-${Date.now()}`,
-    })
-  })
-
-  useEvent(
-    EVENTS.MANAGER.PLAYER_PENALIZED,
-    ({
-      username,
-      penaltyPoints,
-    }: {
-      username: string
-      penaltyPoints: number
-    }) => {
-      toast.error(
-        `⚠️ ${t("game:antiCheat.managerPenaltyAlert", {
-          username,
-          penaltyPoints,
-        })}`,
-        {
-          duration: 10000,
-          id: `penalty-${username}-${Date.now()}`,
-        },
-      )
-    },
-  )
 
   useEvent(EVENTS.GAME.RESET, (message) => {
     navigate({ to: "/manager/config" })

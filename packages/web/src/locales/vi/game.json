@@ -58,7 +58,8 @@
       "modePenalty": "Negative Marking",
       "modePenaltyHint": "Deducts marks when cheating is detected",
       "penaltyPoints": "Penalty Marks (pts)",
-      "penaltyPointsHint": "Marks deducted per detected violation"
+      "penaltyPointsHint": "Marks deducted per detected violation",
+      "hostKickHint": "Notifies you when a participant cheats — you decide whether to kick them"
     },
     "hidePlayerResults": {
       "label": "Kết quả và thứ hạng chỉ dành cho người tổ chức",
