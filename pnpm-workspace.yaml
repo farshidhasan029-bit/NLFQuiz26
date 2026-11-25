@@ -13,6 +13,7 @@ catalog:
   zod: "^4.6.7"
 
 allowBuilds:
+  core-js: false
   esbuild: true
   oxlint: true
   oxlint-tsgolint: true

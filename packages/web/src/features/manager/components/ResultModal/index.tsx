@@ -16,12 +16,21 @@ interface Props {
 }
 
 const ResultModalContent = () => {
-  const { viewMode } = useResultModal()
+  const { viewMode, questionResult, total } = useResultModal()
 
   if (viewMode === "overall") {
     return (
       <div className="min-h-0 flex-1 overflow-y-auto">
         <ResultModalOverall />
+      </div>
+    )
+  }
+
+  // No questions in this result — show fallback
+  if (!questionResult || total === 0) {
+    return (
+      <div className="flex min-h-0 flex-1 items-center justify-center p-8">
+        <p className="text-muted-foreground text-sm">No question data available.</p>
       </div>
     )
   }

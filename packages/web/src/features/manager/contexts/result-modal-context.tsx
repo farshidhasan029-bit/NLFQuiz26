@@ -34,7 +34,7 @@ export interface QuizOverallStats {
 
 interface ResultModalContextType {
   result: GameResult
-  questionResult: QuestionResult
+  questionResult: QuestionResult | null
   questionIndex: number
   total: number
   totalPlayers: number
@@ -63,9 +63,10 @@ export const ResultModalProvider = ({ children, result, onClose }: Props) => {
   const [questionIndex, setQuestionIndex] = useState(0)
   const [viewMode, setViewMode] = useState<ResultViewMode>("overall")
 
-  const questionResult = result.questions[questionIndex]
   const total = result.questions.length
   const totalPlayers = result.players.length
+  // Guard: questionResult may be undefined when questions array is empty
+  const questionResult = result.questions[questionIndex] ?? null
 
   const answeredCount = questionResult?.playerAnswers
     ? questionResult.playerAnswers.filter(
@@ -86,8 +87,9 @@ export const ResultModalProvider = ({ children, result, onClose }: Props) => {
     1,
     ...(questionResult?.answers ?? []).map(
       (_, ai) =>
-        questionResult.playerAnswers.filter((pa) => pa.answerIds?.includes(ai))
-          .length,
+        (questionResult?.playerAnswers ?? []).filter((pa) =>
+          pa.answerIds?.includes(ai),
+        ).length,
     ),
   )
 
