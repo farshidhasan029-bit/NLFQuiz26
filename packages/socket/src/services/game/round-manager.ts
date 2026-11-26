@@ -1014,6 +1014,25 @@ export class RoundManager {
       return
     }
 
+    // Detect duplicate-device submit: same deviceId already has an answer recorded
+    if (player.deviceId) {
+      const firstSubmitter = this.playersAnswers.find((a) => {
+        const submitter = this.opts.players.findById(a.playerId)
+        return submitter?.deviceId === player.deviceId
+      })
+      if (firstSubmitter) {
+        const firstPlayer = this.opts.players.findById(firstSubmitter.playerId)
+        this.opts.io
+          .to(this.opts.getManagerId())
+          .emit(EVENTS.MANAGER.DUPLICATE_DEVICE_SUBMIT, {
+            deviceId: player.deviceId,
+            firstUsername: firstPlayer?.username ?? "Unknown",
+            duplicateUsername: player.username,
+          })
+        return
+      }
+    }
+
     const submitted = this.normalizeAnswer(answerIds)
 
     if (!submitted) {

@@ -150,6 +150,54 @@ const ManagerGamePage = () => {
     toast.error(t(message))
   })
 
+  useEvent(
+    EVENTS.MANAGER.DUPLICATE_DEVICE_SUBMIT,
+    ({
+      deviceId,
+      firstUsername,
+      duplicateUsername,
+    }: {
+      deviceId: string
+      firstUsername: string
+      duplicateUsername: string
+    }) => {
+      const toastId = `dup-device-${deviceId}-${Date.now()}`
+      toast(
+        (toastInstance) => (
+          <div style={{ display: "flex", flexDirection: "column", gap: "6px", minWidth: "220px" }}>
+            <div style={{ fontWeight: 700, fontSize: "14px" }}>📱 Multi-device alert</div>
+            <div style={{ fontSize: "13px", color: "#555" }}>
+              <strong>{duplicateUsername}</strong> tried to submit from the same device as{" "}
+              <strong>{firstUsername}</strong>. The duplicate answer was <strong>blocked</strong>.
+            </div>
+            <button
+              onClick={() => toast.dismiss(toastInstance.id)}
+              style={{
+                marginTop: "4px",
+                background: "#e5e7eb",
+                color: "#374151",
+                border: "none",
+                borderRadius: "6px",
+                padding: "4px 14px",
+                fontWeight: 600,
+                fontSize: "13px",
+                cursor: "pointer",
+                alignSelf: "flex-start",
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        ),
+        {
+          duration: 15000,
+          id: toastId,
+          style: { maxWidth: "340px" },
+        },
+      )
+    },
+  )
+
   const handleSkip = () => {
     if (!status) {
       return

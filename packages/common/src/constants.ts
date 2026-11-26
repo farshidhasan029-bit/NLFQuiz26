@@ -39,6 +39,7 @@ export const EVENTS = {
     REMOVE_PLAYER: "manager:removePlayer",
     PLAYER_KICKED: "manager:playerKicked",
     PLAYER_CHEAT_DETECTED: "manager:playerCheatDetected",
+    DUPLICATE_DEVICE_SUBMIT: "manager:duplicateDeviceSubmit",
     PLAYER_EXPELLED: "manager:playerExpelled",
     PLAYER_PENALIZED: "manager:playerPenalized",
     PLAYER_UPDATED: "manager:playerUpdated",
